@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}Installation {{ installation.reference }}{% endblock %}
+{% block page_title %}Installation{% endblock %}
+{% block breadcrumb %}Terrain › Installations › {{ installation.reference }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>{{ installation.reference }}</h2>
+        <p>{{ installation.client.nom }}</p>
+    </div>
+    <div style="display:flex;gap:10px;">
+        <a href="{% url 'stock:installation_liste' %}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+        <a href="{% url 'stock:installation_modifier' installation.pk %}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Modifier
+        </a>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 280px;gap:20px;">
+
+<div style="display:flex;flex-direction:column;gap:16px;">
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-info-circle"></i> Détails</div>
+        </div>
+        <div class="card-body">
+            <div class="form-grid-2">
+                <div>
+                    <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Client</div>
+                    <div style="font-weight:600;color:var(--navy);">{{ installation.client.nom }}</div>
+                </div>
+                <div>
+                    <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Site</div>
+                    <div style="font-weight:600;color:var(--navy);">{{ installation.site|default:"—" }}</div>
+                </div>
+                <div>
+                    <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Technicien</div>
+                    <div style="font-weight:600;color:var(--navy);">{{ installation.technicien|default:"—" }}</div>
+                </div>
+                <div>
+                    <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Date prévue</div>
+                    <div style="font-weight:600;color:var(--navy);">{{ installation.date_prevue|date:"d/m/Y" }}</div>
+                </div>
+                <div>
+                    <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Date réelle</div>
+                    <div style="font-weight:600;color:var(--navy);">{{ installation.date_reelle|date:"d/m/Y"|default:"—" }}</div>
+                </div>
+                <div>
+                    <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Facture</div>
+                    <div style="font-weight:600;color:var(--navy);">
+                        {% if installation.facture %}
+                        <a href="{% url 'stock:facture_detail' installation.facture.pk %}" style="color:var(--primary);">
+                            {{ installation.facture.numero }}
+                        </a>
+                        {% else %}—{% endif %}
+                    </div>
+                </div>
+            </div>
+            {% if installation.description %}
+            <div style="margin-top:16px;padding:14px;background:var(--bg);border-radius:var(--radius);border-left:3px solid var(--primary);">
+                <div style="font-size:11px;font-weight:700;color:var(--text-light);margin-bottom:4px;">DESCRIPTION</div>
+                <div style="font-size:13px;">{{ installation.description }}</div>
+            </div>
+            {% endif %}
+            {% if installation.notes %}
+            <div style="margin-top:12px;padding:14px;background:var(--accent-light);border-radius:var(--radius);border-left:3px solid var(--accent);">
+                <div style="font-size:11px;font-weight:700;color:var(--text-light);margin-bottom:4px;">NOTES</div>
+                <div style="font-size:13px;">{{ installation.notes }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Colonne droite -->
+<div style="display:flex;flex-direction:column;gap:16px;">
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-info-circle"></i> Statut</div>
+        </div>
+        <div class="card-body" style="text-align:center;padding:24px;">
+            {% if installation.statut == 'termine' %}
+                <div style="width:60px;height:60px;background:#ecfdf5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                    <i class="fas fa-check-circle" style="font-size:28px;color:var(--primary);"></i>
+                </div>
+                <span class="badge badge-success" style="font-size:14px;padding:6px 16px;">Terminé</span>
+            {% elif installation.statut == 'en_cours' %}
+                <div style="width:60px;height:60px;background:var(--navy-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                    <i class="fas fa-spinner" style="font-size:28px;color:var(--navy);"></i>
+                </div>
+                <span class="badge badge-info" style="font-size:14px;padding:6px 16px;">En cours</span>
+            {% elif installation.statut == 'planifie' %}
+                <div style="width:60px;height:60px;background:var(--accent-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                    <i class="fas fa-clock" style="font-size:28px;color:var(--accent);"></i>
+                </div>
+                <span class="badge badge-warning" style="font-size:14px;padding:6px 16px;">Planifié</span>
+            {% else %}
+                <div style="width:60px;height:60px;background:#fef2f2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                    <i class="fas fa-times-circle" style="font-size:28px;color:#ef4444;"></i>
+                </div>
+                <span class="badge badge-danger" style="font-size:14px;padding:6px 16px;">Annulé</span>
+            {% endif %}
+            <div style="margin-top:20px;">
+                <a href="{% url 'stock:installation_modifier' installation.pk %}" class="btn btn-primary" style="width:100%;justify-content:center;">
+                    <i class="fas fa-edit"></i> Modifier le statut
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-bolt"></i> Actions</div>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:8px;padding:12px;">
+            <a href="{% url 'stock:maintenance_ajouter' %}" class="btn btn-warning" style="justify-content:center;">
+                <i class="fas fa-wrench"></i> Créer ticket SAV
+            </a>
+            <a href="{% url 'stock:installation_supprimer' installation.pk %}" class="btn btn-danger" style="justify-content:center;">
+                <i class="fas fa-trash"></i> Supprimer
+            </a>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

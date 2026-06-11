@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% block title %}{{ categorie.nom }}{% endblock %}
+{% block page_title %}Catégorie{% endblock %}
+{% block breadcrumb %}Stock › Catégories › {{ categorie.nom }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>{{ categorie.nom }}</h2>
+        <p>{{ categorie.produit_set.count }} produit(s) dans cette catégorie</p>
+    </div>
+    <div style="display:flex;gap:10px;">
+        <a href="{% url 'stock:categorie_liste' %}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+        <a href="{% url 'stock:categorie_modifier' categorie.pk %}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Modifier
+        </a>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start;">
+
+<!-- ═══ PRODUITS ═══ -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-camera-retro"></i> Produits de cette catégorie
+        </div>
+        <a href="{% url 'stock:produit_ajouter' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus"></i> Ajouter produit
+        </a>
+    </div>
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Produit</th>
+                    <th>Prix achat</th>
+                    <th>Prix vente</th>
+                    <th>Stock</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in categorie.produit_set.all %}
+                <tr>
+                    <td>
+                        <div class="product-info">
+                            <div class="product-thumb">
+                                {% if p.image %}
+                                    <img src="{{ p.image.url }}"
+                                         style="width:100%;height:100%;object-fit:cover;border-radius:8px;">
+                                {% else %}
+                                    <i class="fas fa-camera"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div class="product-name">{{ p.nom }}</div>
+                                <div class="product-ref">{{ p.reference }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ p.prix_achat }} MRU</td>
+                    <td><strong style="color:var(--primary);">{{ p.prix_vente }} MRU</strong></td>
+                    <td>
+                        <strong>{{ p.quantite_stock }}</strong>
+                        <div class="stock-bar">
+                            <div class="stock-bar-fill {% if p.stock_bas %}low{% else %}high{% endif %}"
+                                 style="width:{% widthratio p.quantite_stock 50 100 %}%"></div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if p.stock_bas %}
+                            <span class="badge badge-danger">
+                                <i class="fas fa-exclamation-triangle"></i> Bas
+                            </span>
+                        {% else %}
+                            <span class="badge badge-success">
+                                <i class="fas fa-check-circle"></i> OK
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:6px;">
+                            <a href="{% url 'stock:produit_detail' p.pk %}"
+                               class="btn btn-outline btn-sm btn-icon" title="Voir">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'stock:produit_modifier' p.pk %}"
+                               class="btn btn-warning btn-sm btn-icon" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state" style="padding:30px;">
+                            <i class="fas fa-camera-retro"></i>
+                            <h3>Aucun produit</h3>
+                            <p>Aucun produit dans cette catégorie</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══ COLONNE DROITE ═══ -->
+<div style="display:flex;flex-direction:column;gap:16px;">
+
+    <!-- Info catégorie -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-tag"></i> Détails</div>
+        </div>
+        <div class="card-body" style="padding:16px;">
+            <div style="text-align:center;margin-bottom:20px;">
+                <div style="width:64px;height:64px;background:var(--primary-light);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                    <i class="fas fa-tags" style="font-size:28px;color:var(--primary);"></i>
+                </div>
+                <div style="font-size:18px;font-weight:800;color:var(--text-dark);">
+                    {{ categorie.nom }}
+                </div>
+            </div>
+
+            {% if categorie.description %}
+            <div style="background:var(--bg);border-radius:10px;padding:12px;margin-bottom:14px;">
+                <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;margin-bottom:4px;">Description</div>
+                <div style="font-size:13px;color:var(--text-mid);">{{ categorie.description }}</div>
+            </div>
+            {% endif %}
+
+            <div class="total-row">
+                <span>Nb produits</span>
+                <span style="font-weight:800;font-size:18px;color:var(--primary);">
+                    {{ categorie.produit_set.count }}
+                </span>
+            </div>
+            <div class="total-row">
+                <span>Stock total</span>
+                <span style="font-weight:700;">
+                    {% with total=0 %}
+                    {% for p in categorie.produit_set.all %}
+                    {% endfor %}
+                    {{ categorie.produit_set.count }}
+                    {% endwith %}
+                    unités
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-bolt"></i> Actions</div>
+        </div>
+        <div class="card-body" style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+            <a href="{% url 'stock:categorie_modifier' categorie.pk %}"
+               class="btn btn-warning" style="justify-content:center;">
+                <i class="fas fa-edit"></i> Modifier
+            </a>
+            <a href="{% url 'stock:produit_ajouter' %}"
+               class="btn btn-primary" style="justify-content:center;">
+                <i class="fas fa-plus"></i> Ajouter un produit
+            </a>
+            <a href="{% url 'stock:categorie_supprimer' categorie.pk %}"
+               class="btn btn-danger" style="justify-content:center;">
+                <i class="fas fa-trash"></i> Supprimer
+            </a>
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock %}

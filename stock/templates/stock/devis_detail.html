@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% block title %}Devis {{ devis.numero }}{% endblock %}
+{% block page_title %}Devis{% endblock %}
+{% block breadcrumb %}Commerce › Devis › {{ devis.numero }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>Devis {{ devis.numero }}</h2>
+    </div>
+    <div style="display:flex;gap:10px;">
+        <a href="{% url 'stock:devis_liste' %}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+        <a href="{% url 'stock:devis_modifier' devis.pk %}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Modifier
+        </a>
+        <a href="{% url 'stock:devis_pdf' devis.pk %}" class="btn btn-navy">
+            <i class="fas fa-file-pdf"></i> PDF
+        </a>
+        {% if devis.statut == 'accepte' %}
+        <a href="{% url 'stock:facture_ajouter' %}" class="btn btn-primary">
+            <i class="fas fa-file-invoice"></i> Créer facture
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start;">
+
+<!-- ═══ DEVIS PRINCIPAL ═══ -->
+<div class="card">
+    <div class="card-body">
+
+        <!-- En-tête -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid var(--primary);">
+            <div style="display:flex;align-items:center;gap:14px;">
+                <div style="width:52px;height:52px;background:var(--primary);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <div>
+                    <div style="font-size:20px;font-weight:800;color:var(--navy)">MLC Technologie</div>
+                    <div style="font-size:12px;color:var(--text-light)">Spécialiste caméras & sécurité</div>
+                    <div style="font-size:12px;color:var(--text-light)">Nouakchott, Mauritanie • +222 49 71 79 05</div>
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:32px;font-weight:800;color:var(--primary);">DEVIS</div>
+                <div style="font-size:20px;font-weight:700;color:var(--navy);">N° {{ devis.numero }}</div>
+                <div style="margin-top:8px;font-size:13px;color:var(--text-light);line-height:1.8;">
+                    Date : {{ devis.date_creation|date:"d/m/Y" }}<br>
+                    Valide jusqu'au : {{ devis.date_validite|date:"d/m/Y" }}
+                </div>
+                <div style="margin-top:8px;">
+                    {% if devis.statut == 'accepte' %}
+                        <span class="badge badge-success" style="font-size:13px;padding:5px 14px;">✓ Accepté</span>
+                    {% elif devis.statut == 'envoye' %}
+                        <span class="badge badge-info" style="font-size:13px;padding:5px 14px;">📤 Envoyé</span>
+                    {% elif devis.statut == 'refuse' %}
+                        <span class="badge badge-danger" style="font-size:13px;padding:5px 14px;">✗ Refusé</span>
+                    {% else %}
+                        <span class="badge badge-gray" style="font-size:13px;padding:5px 14px;">📝 Brouillon</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Client -->
+        <div style="background:var(--primary-light);border-radius:var(--radius);padding:16px 20px;margin-bottom:24px;border-left:4px solid var(--primary);">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--primary);margin-bottom:6px;">CLIENT</div>
+            <div style="font-size:17px;font-weight:800;color:var(--navy);">{{ devis.client.nom }}</div>
+            <div style="font-size:13px;color:var(--text-mid);margin-top:4px;line-height:1.8;">
+                {% if devis.client.telephone %}Tél : {{ devis.client.telephone }}<br>{% endif %}
+                {% if devis.client.email %}Email : {{ devis.client.email }}<br>{% endif %}
+                {% if devis.client.adresse %}{{ devis.client.adresse }}{% endif %}
+            </div>
+        </div>
+
+        <!-- Tableau lignes -->
+        <table class="table" style="margin-bottom:0;">
+            <thead>
+                <tr>
+                    <th style="width:5%">#</th>
+                    <th>PRODUIT</th>
+                    <th style="text-align:right;">PRIX UNITAIRE</th>
+                    <th style="text-align:center;">QTÉ</th>
+                    <th style="text-align:right;">SOUS-TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ligne in devis.lignes.all %}
+                <tr>
+                    <td style="color:var(--text-light);">{{ forloop.counter }}</td>
+                    <td>
+                        <div style="font-weight:600;color:var(--navy);">{{ ligne.produit.nom }}</div>
+                        <div style="font-size:11px;color:var(--text-light);">Réf : {{ ligne.produit.reference }}</div>
+                    </td>
+                    <td style="text-align:right;">{{ ligne.prix_unitaire }} MRU</td>
+                    <td style="text-align:center;"><strong>{{ ligne.quantite }}</strong></td>
+                    <td style="text-align:right;font-weight:700;color:var(--navy);">{{ ligne.sous_total }} MRU</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align:center;padding:30px;color:var(--text-light);">
+                        Aucune ligne dans ce devis
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Total -->
+        <div style="display:flex;justify-content:flex-end;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+            <div style="min-width:280px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:2px solid var(--primary);">
+                    <span style="font-size:17px;font-weight:800;color:var(--navy);">TOTAL TTC</span>
+                    <span style="font-size:22px;font-weight:800;color:var(--primary);">{{ devis.total }} MRU</span>
+                </div>
+            </div>
+        </div>
+
+        {% if devis.notes %}
+        <div style="margin-top:20px;padding:14px 18px;background:var(--bg);border-radius:var(--radius);border-left:3px solid var(--accent);">
+            <div style="font-size:11px;font-weight:700;color:var(--text-light);margin-bottom:4px;text-transform:uppercase;">NOTES</div>
+            <div style="font-size:13px;color:var(--text-mid);">{{ devis.notes }}</div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<!-- ═══ COLONNE DROITE ═══ -->
+<div style="display:flex;flex-direction:column;gap:16px;">
+
+    <!-- Résumé -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-info-circle"></i> Résumé</div>
+        </div>
+        <div class="card-body" style="padding:16px;">
+            <div class="total-row">
+                <span>Total devis</span>
+                <span style="font-weight:700;color:var(--navy);">{{ devis.total }} MRU</span>
+            </div>
+            <div class="total-row">
+                <span>Nb lignes</span>
+                <span style="font-weight:700;">{{ devis.lignes.count }}</span>
+            </div>
+            <div class="total-row">
+                <span>Validité</span>
+                <span style="font-weight:700;">{{ devis.date_validite|date:"d/m/Y" }}</span>
+            </div>
+            <div class="total-row" style="border-top:2px solid var(--primary);margin-top:6px;padding-top:10px;">
+                <span style="font-weight:700;">Statut</span>
+                <span>
+                    {% if devis.statut == 'accepte' %}
+                        <span class="badge badge-success">Accepté</span>
+                    {% elif devis.statut == 'envoye' %}
+                        <span class="badge badge-info">Envoyé</span>
+                    {% elif devis.statut == 'refuse' %}
+                        <span class="badge badge-danger">Refusé</span>
+                    {% else %}
+                        <span class="badge badge-gray">Brouillon</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-bolt"></i> Actions rapides</div>
+        </div>
+        <div class="card-body" style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+            <a href="{% url 'stock:devis_modifier' devis.pk %}" class="btn btn-warning" style="justify-content:center;">
+                <i class="fas fa-edit"></i> Modifier le devis
+            </a>
+            <a href="{% url 'stock:devis_pdf' devis.pk %}" class="btn btn-navy" style="justify-content:center;">
+                <i class="fas fa-file-pdf"></i> Télécharger PDF
+            </a>
+            {% if devis.statut != 'accepte' %}
+            <form method="post" action="{% url 'stock:devis_accepter' devis.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+                    <i class="fas fa-check"></i> Marquer accepté
+                </button>
+            </form>
+            {% endif %}
+            <a href="{% url 'stock:devis_supprimer' devis.pk %}" class="btn btn-danger" style="justify-content:center;">
+                <i class="fas fa-trash"></i> Supprimer
+            </a>
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock %}

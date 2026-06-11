@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+{% block title %}{{ titre }}{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+{% block breadcrumb %}Commerce › Devis › {{ titre }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>{{ titre }}</h2>
+        <p>Créez un nouveau devis</p>
+    </div>
+    <a href="{% url 'stock:devis_liste' %}" class="btn btn-outline">
+        <i class="fas fa-arrow-left"></i> Retour
+    </a>
+</div>
+
+<form method="post" id="devisForm">
+{% csrf_token %}
+<div style="display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start;">
+
+    <!-- Colonne gauche -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+        <!-- Informations devis -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><i class="fas fa-file-alt"></i> Informations du devis</div>
+            </div>
+            <div class="card-body">
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label">N° Devis *</label>
+                        {{ form.numero }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Client *</label>
+                        <div class="input-with-btn">
+                            {{ form.client }}
+                            <button type="button" class="btn-add-inline" onclick="openModal('clientModal')" title="Nouveau client">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date de validité *</label>
+                        {{ form.date_validite }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Statut</label>
+                        {{ form.statut }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    {{ form.notes }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Lignes devis -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><i class="fas fa-list"></i> Lignes du devis</div>
+            </div>
+            <div class="table-wrapper">
+                <table class="table" id="lignesTable">
+                    <thead>
+                        <tr>
+                            <th style="width:40%">DESCRIPTION *</th>
+                            <th style="width:12%;text-align:center">QTÉ</th>
+                            <th style="width:20%;text-align:right">PRIX UNIT. (MRU)</th>
+                            <th style="width:20%;text-align:right">TOTAL (MRU)</th>
+                            <th style="width:8%"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="lignesBody">
+                        {% if devis %}
+                            {% for ligne in devis.lignes.all %}
+                            <tr class="ligne-row">
+                                <td>
+                                    <select name="ligne_produit[]" class="form-select ligne-produit" onchange="onProduitChange(this)">
+                                        <option value="">-- Choisir un produit --</option>
+                                        {% for p in produits %}
+                                        <option value="{{ p.pk }}" data-prix="{{ p.prix_vente }}" {% if ligne.produit.pk == p.pk %}selected{% endif %}>
+                                            {{ p.nom }} (Stock: {{ p.quantite_stock }})
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td><input type="number" name="ligne_quantite[]" class="form-control ligne-qte" value="{{ ligne.quantite }}" min="1" style="text-align:center" oninput="calcTotal(this)"></td>
+                                <td><input type="number" name="ligne_prix[]" class="form-control ligne-prix" value="{{ ligne.prix_unitaire }}" step="0.01" style="text-align:right" oninput="calcTotal(this)"></td>
+                                <td><input type="text" class="form-control ligne-total" value="{{ ligne.sous_total }}" readonly style="text-align:right;background:var(--bg);font-weight:700;color:var(--navy)"></td>
+                                <td><button type="button" class="btn btn-danger btn-sm btn-icon" onclick="supprimerLigne(this)"><i class="fas fa-trash"></i></button></td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr class="ligne-row">
+                                <td>
+                                    <select name="ligne_produit[]" class="form-select ligne-produit" onchange="onProduitChange(this)">
+                                        <option value="">-- Choisir un produit --</option>
+                                        {% for p in produits %}
+                                        <option value="{{ p.pk }}" data-prix="{{ p.prix_vente }}">{{ p.nom }} (Stock: {{ p.quantite_stock }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td><input type="number" name="ligne_quantite[]" class="form-control ligne-qte" value="1" min="1" style="text-align:center" oninput="calcTotal(this)"></td>
+                                <td><input type="number" name="ligne_prix[]" class="form-control ligne-prix" value="0" step="0.01" style="text-align:right" oninput="calcTotal(this)"></td>
+                                <td><input type="text" class="form-control ligne-total" value="0" readonly style="text-align:right;background:var(--bg);font-weight:700;color:var(--navy)"></td>
+                                <td><button type="button" class="btn btn-danger btn-sm btn-icon" onclick="supprimerLigne(this)"><i class="fas fa-trash"></i></button></td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            <div style="padding:14px 22px;border-top:1px solid var(--border);">
+                <button type="button" class="btn btn-outline btn-sm" onclick="ajouterLigne()">
+                    <i class="fas fa-plus"></i> Ajouter une ligne
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Colonne droite — Totaux -->
+    <div style="position:sticky;top:80px;">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><i class="fas fa-calculator"></i> Totaux</div>
+            </div>
+            <div class="card-body">
+                <div class="total-row">
+                    <span>Sous-total HT</span>
+                    <span id="sousTotal">0 MRU</span>
+                </div>
+                <div class="total-row" style="border-top:2px solid var(--primary);margin-top:8px;padding-top:12px;">
+                    <span style="font-size:16px;font-weight:800;color:var(--navy)">Total TTC</span>
+                    <span id="totalTTC" style="font-size:20px;font-weight:800;color:var(--primary)">0 MRU</span>
+                </div>
+            </div>
+            <div style="padding:0 18px 18px;display:flex;flex-direction:column;gap:10px;">
+                <button type="submit" class="btn btn-primary" style="justify-content:center;">
+                    <i class="fas fa-save"></i> Enregistrer le devis
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+</form>
+
+<!-- MODAL CLIENT -->
+<div class="modal-overlay" id="clientModal">
+    <div class="modal-box" style="max-width:500px">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fas fa-user-plus"></i> Nouveau client</div>
+            <button class="modal-close" onclick="closeModal('clientModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Nom *</label>
+                <input type="text" id="cl_nom" class="form-control" placeholder="Nom du client">
+            </div>
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Téléphone</label>
+                    <input type="text" id="cl_tel" class="form-control" placeholder="+222 XX XX XX XX">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="cl_email" class="form-control" placeholder="email@exemple.com">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('clientModal')">Annuler</button>
+            <button class="btn btn-primary" onclick="saveClientModal()">
+                <i class="fas fa-save"></i> Enregistrer
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const csrfToken = '{{ csrf_token }}';
+const produitsData = {};
+{% for p in produits %}
+produitsData["{{ p.pk }}"] = {
+    prix: "{{ p.prix_vente }}",
+    nom: "{{ p.nom }}",
+    stock: {{ p.quantite_stock }}
+};
+{% endfor %}
+
+function getLigneTemplate() {
+    let options = '<option value="">-- Choisir un produit --</option>';
+    for (const [id, p] of Object.entries(produitsData)) {
+        options += `<option value="${id}" data-prix="${p.prix}">${p.nom} (Stock: ${p.stock})</option>`;
+    }
+    return `
+    <tr class="ligne-row">
+        <td><select name="ligne_produit[]" class="form-select ligne-produit" onchange="onProduitChange(this)">${options}</select></td>
+        <td><input type="number" name="ligne_quantite[]" class="form-control ligne-qte" value="1" min="1" style="text-align:center" oninput="calcTotal(this)"></td>
+        <td><input type="number" name="ligne_prix[]" class="form-control ligne-prix" value="0" step="0.01" style="text-align:right" oninput="calcTotal(this)"></td>
+        <td><input type="text" class="form-control ligne-total" value="0" readonly style="text-align:right;background:var(--bg);font-weight:700;color:var(--navy)"></td>
+        <td><button type="button" class="btn btn-danger btn-sm btn-icon" onclick="supprimerLigne(this)"><i class="fas fa-trash"></i></button></td>
+    </tr>`;
+}
+
+function ajouterLigne() {
+    document.getElementById('lignesBody').insertAdjacentHTML('beforeend', getLigneTemplate());
+    mettreAJourTotaux();
+}
+
+function supprimerLigne(btn) {
+    const rows = document.querySelectorAll('.ligne-row');
+    if (rows.length <= 1) {
+        alert('Le devis doit avoir au moins une ligne.');
+        return;
+    }
+    btn.closest('tr').remove();
+    mettreAJourTotaux();
+}
+
+function onProduitChange(select) {
+    const row = select.closest('tr');
+    const id = select.value;
+    if (id && produitsData[id]) {
+        row.querySelector('.ligne-prix').value = produitsData[id].prix;
+        calcTotal(select);
+    }
+}
+
+function calcTotal(el) {
+    const row = el.closest('tr');
+    const qte  = parseFloat(row.querySelector('.ligne-qte').value) || 0;
+    const prix = parseFloat(row.querySelector('.ligne-prix').value) || 0;
+    row.querySelector('.ligne-total').value = (qte * prix).toFixed(2);
+    mettreAJourTotaux();
+}
+
+function mettreAJourTotaux() {
+    let total = 0;
+    document.querySelectorAll('.ligne-row').forEach(row => {
+        const qte  = parseFloat(row.querySelector('.ligne-qte').value) || 0;
+        const prix = parseFloat(row.querySelector('.ligne-prix').value) || 0;
+        total += qte * prix;
+    });
+    document.getElementById('sousTotal').textContent = total.toFixed(2) + ' MRU';
+    document.getElementById('totalTTC').textContent  = total.toFixed(2) + ' MRU';
+}
+
+function openModal(id) { document.getElementById(id).classList.add('active'); document.body.style.overflow='hidden'; }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); document.body.style.overflow=''; }
+document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', function(e) { if(e.target===this) closeModal(this.id); });
+});
+
+function saveClientModal() {
+    const nom = document.getElementById('cl_nom').value.trim();
+    if (!nom) { alert('Le nom est obligatoire'); return; }
+    fetch("{% url 'stock:client_quick' %}", {
+        method: 'POST',
+        headers: {'Content-Type':'application/x-www-form-urlencoded','X-CSRFToken':csrfToken},
+        body: new URLSearchParams({
+            nom,
+            telephone: document.getElementById('cl_tel').value,
+            email: document.getElementById('cl_email').value,
+            adresse: ''
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const select = document.querySelector('select[name="client"]');
+            select.add(new Option(data.nom, data.id, true, true));
+            closeModal('clientModal');
+            showToast('Client ajouté !', 'success');
+        }
+    });
+}
+
+function showToast(msg, type) {
+    const t = document.createElement('div');
+    t.className = `toast toast-${type}`;
+    t.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`;
+    document.body.appendChild(t);
+    setTimeout(() => t.classList.add('show'), 10);
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+mettreAJourTotaux();
+</script>
+{% endblock %}

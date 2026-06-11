@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+{% block title %}{{ titre }}{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+{% block breadcrumb %}Terrain › Installations › {{ titre }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title"><h2>{{ titre }}</h2></div>
+    <a href="{% url 'stock:installation_liste' %}" class="btn btn-outline">
+        <i class="fas fa-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="card-title"><i class="fas fa-tools"></i> Informations installation</div>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Référence *</label>
+                    {{ form.reference }}
+                </div>
+
+                <!-- Client avec bouton + -->
+                <div class="form-group">
+                    <label class="form-label">Client *</label>
+                    <div class="input-with-btn">
+                        {{ form.client }}
+                        <button type="button" class="btn-add-inline"
+                                onclick="openModal('clientModal')"
+                                title="Nouveau client">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Site avec bouton + -->
+                <div class="form-group">
+                    <label class="form-label">Site</label>
+                    <div class="input-with-btn">
+                        {{ form.site }}
+                        <button type="button" class="btn-add-inline"
+                                onclick="openModal('siteModal')"
+                                title="Nouveau site">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Technicien</label>
+                    {{ form.technicien }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date prévue *</label>
+                    {{ form.date_prevue }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date réelle</label>
+                    {{ form.date_reelle }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Statut</label>
+                    {{ form.statut }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Facture liée</label>
+                    {{ form.facture }}
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                {{ form.description }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Notes</label>
+                {{ form.notes }}
+            </div>
+            <div class="form-actions">
+                <a href="{% url 'stock:installation_liste' %}" class="btn btn-outline">Annuler</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ══ MODAL CLIENT ══ -->
+<div class="modal-overlay" id="clientModal">
+    <div class="modal-box" style="max-width:500px">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fas fa-user-plus"></i> Nouveau client</div>
+            <button class="modal-close" onclick="closeModal('clientModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Nom *</label>
+                <input type="text" id="cl_nom" class="form-control" placeholder="Nom du client">
+            </div>
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Téléphone</label>
+                    <input type="text" id="cl_tel" class="form-control" placeholder="+222 XX XX XX XX">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="cl_email" class="form-control" placeholder="email@exemple.com">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Adresse</label>
+                <textarea id="cl_adresse" class="form-control" rows="2" placeholder="Adresse..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('clientModal')">Annuler</button>
+            <button class="btn btn-primary" onclick="saveClient()">
+                <i class="fas fa-save"></i> Enregistrer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ MODAL SITE ══ -->
+<div class="modal-overlay" id="siteModal">
+    <div class="modal-box" style="max-width:520px">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fas fa-map-marker-alt"></i> Nouveau site</div>
+            <button class="modal-close" onclick="closeModal('siteModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Client *</label>
+                    <select id="site_client" class="form-select">
+                        <option value="">-- Choisir --</option>
+                        {% for c in clients %}
+                        <option value="{{ c.pk }}">{{ c.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nom du site *</label>
+                    <input type="text" id="site_nom" class="form-control" placeholder="Ex: Siège social">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Latitude GPS</label>
+                    <input type="number" id="site_lat" class="form-control"
+                           placeholder="18.0783" step="0.000001">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Longitude GPS</label>
+                    <input type="number" id="site_lng" class="form-control"
+                           placeholder="-15.9653" step="0.000001">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Adresse *</label>
+                <textarea id="site_adresse" class="form-control" rows="2"
+                          placeholder="Adresse complète du site..."></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea id="site_desc" class="form-control" rows="2"
+                          placeholder="Description du site..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('siteModal')">Annuler</button>
+            <button class="btn btn-primary" onclick="saveSite()">
+                <i class="fas fa-save"></i> Enregistrer
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const csrfToken = '{{ csrf_token }}';
+
+function openModal(id) {
+    document.getElementById(id).classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+    document.body.style.overflow = '';
+}
+document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', function(e) {
+        if (e.target === this) closeModal(this.id);
+    });
+});
+
+function showToast(msg, type) {
+    const t = document.createElement('div');
+    t.className = `toast toast-${type}`;
+    t.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`;
+    document.body.appendChild(t);
+    setTimeout(() => t.classList.add('show'), 10);
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+// ── Sauvegarder client ──
+function saveClient() {
+    const nom = document.getElementById('cl_nom').value.trim();
+    if (!nom) { alert('Le nom est obligatoire'); return; }
+
+    const btn = event.target;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+
+    fetch("{% url 'stock:client_quick' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken },
+        body: new URLSearchParams({
+            nom,
+            telephone: document.getElementById('cl_tel').value,
+            email:     document.getElementById('cl_email').value,
+            adresse:   document.getElementById('cl_adresse').value,
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            // Ajoute dans select client du formulaire
+            const select = document.querySelector('select[name="client"]');
+            select.add(new Option(data.nom, data.id, true, true));
+            // Ajoute aussi dans select client du modal site
+            const siteClientSelect = document.getElementById('site_client');
+            siteClientSelect.add(new Option(data.nom, data.id));
+            closeModal('clientModal');
+            showToast('Client ajouté !', 'success');
+            ['cl_nom','cl_tel','cl_email','cl_adresse'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+        } else {
+            showToast('Erreur : ' + data.errors, 'error');
+        }
+    })
+    .catch(() => showToast('Erreur de connexion !', 'error'))
+    .finally(() => {
+        btn.innerHTML = '<i class="fas fa-save"></i> Enregistrer';
+        btn.disabled = false;
+    });
+}
+
+// ── Sauvegarder site ──
+function saveSite() {
+    const nom     = document.getElementById('site_nom').value.trim();
+    const client  = document.getElementById('site_client').value;
+    const adresse = document.getElementById('site_adresse').value.trim();
+
+    if (!nom)     { alert('Le nom du site est obligatoire'); return; }
+    if (!client)  { alert('Le client est obligatoire'); return; }
+    if (!adresse) { alert("L'adresse est obligatoire"); return; }
+
+    const btn = event.target;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+
+    fetch("{% url 'stock:site_quick' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken },
+        body: new URLSearchParams({
+            nom,
+            client:    client,
+            adresse:   adresse,
+            latitude:  document.getElementById('site_lat').value,
+            longitude: document.getElementById('site_lng').value,
+            description: document.getElementById('site_desc').value,
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            // Ajoute dans select site du formulaire
+            const select = document.querySelector('select[name="site"]');
+            select.add(new Option(data.nom + ' — ' + data.client, data.id, true, true));
+            closeModal('siteModal');
+            showToast('Site ajouté !', 'success');
+            ['site_nom','site_adresse','site_lat','site_lng','site_desc'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('site_client').value = '';
+        } else {
+            showToast('Erreur : ' + data.errors, 'error');
+        }
+    })
+    .catch(() => showToast('Erreur de connexion !', 'error'))
+    .finally(() => {
+        btn.innerHTML = '<i class="fas fa-save"></i> Enregistrer';
+        btn.disabled = false;
+    });
+}
+</script>
+{% endblock %}

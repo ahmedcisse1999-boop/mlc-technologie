@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% block title %}Facture {{ facture.numero }}{% endblock %}
+{% block page_title %}Facture{% endblock %}
+{% block breadcrumb %}Commerce › Factures › {{ facture.numero }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>Facture {{ facture.numero }}</h2>
+    </div>
+    <div style="display:flex;gap:10px;">
+        <a href="{% url 'stock:facture_liste' %}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+        {% if facture.statut != 'payee' %}
+        <a href="{% url 'stock:paiement_ajouter' facture.pk %}" class="btn btn-success">
+            <i class="fas fa-money-bill-wave"></i> Nouveau paiement
+        </a>
+        {% endif %}
+        <a href="{% url 'stock:facture_pdf' facture.pk %}" class="btn btn-navy">
+            <i class="fas fa-file-pdf"></i> PDF
+        </a>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start;">
+
+<!-- ═══ FACTURE PRINCIPALE ═══ -->
+<div class="card">
+    <div class="card-body">
+
+        <!-- En-tête -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid var(--primary);">
+            <div style="display:flex;align-items:center;gap:14px;">
+                <div style="width:52px;height:52px;background:var(--primary);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <div>
+                    <div style="font-size:20px;font-weight:800;color:var(--navy)">MLC Technologie</div>
+                    <div style="font-size:12px;color:var(--text-light)">Spécialiste caméras & sécurité</div>
+                    <div style="font-size:12px;color:var(--text-light)">Nouakchott, Mauritanie • +222 49 71 79 05</div>
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:32px;font-weight:800;color:var(--primary);">FACTURE</div>
+                <div style="font-size:20px;font-weight:700;color:var(--navy);">N° {{ facture.numero }}</div>
+                <div style="margin-top:8px;font-size:13px;color:var(--text-light);line-height:1.8;">
+                    Date : {{ facture.date_creation|date:"d/m/Y" }}<br>
+                    Échéance : {{ facture.date_echeance|date:"d/m/Y" }}
+                </div>
+                <div style="margin-top:8px;">
+                    {% if facture.statut == 'payee' %}
+                        <span class="badge badge-success" style="font-size:13px;padding:5px 14px;">✓ Payée</span>
+                    {% elif facture.statut == 'partiellement' %}
+                        <span class="badge badge-warning" style="font-size:13px;padding:5px 14px;">⏳ Partielle</span>
+                    {% else %}
+                        <span class="badge badge-danger" style="font-size:13px;padding:5px 14px;">✗ Non payée</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Client -->
+        <div style="background:var(--primary-light);border-radius:var(--radius);padding:16px 20px;margin-bottom:24px;border-left:4px solid var(--primary);">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--primary);margin-bottom:6px;">FACTURÉ À</div>
+            <div style="font-size:17px;font-weight:800;color:var(--navy);">{{ facture.client.nom }}</div>
+            <div style="font-size:13px;color:var(--text-mid);margin-top:4px;line-height:1.8;">
+                {% if facture.client.telephone %}Tél : {{ facture.client.telephone }}<br>{% endif %}
+                {% if facture.client.email %}Email : {{ facture.client.email }}<br>{% endif %}
+                {% if facture.client.adresse %}{{ facture.client.adresse }}{% endif %}
+            </div>
+        </div>
+
+        <!-- Tableau des lignes -->
+        <table class="table" style="margin-bottom:0;">
+            <thead>
+                <tr>
+                    <th style="width:5%">#</th>
+                    <th>PRODUIT</th>
+                    <th style="text-align:right;">PRIX UNITAIRE</th>
+                    <th style="text-align:center;">QTÉ</th>
+                    <th style="text-align:right;">SOUS-TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ligne in facture.lignes.all %}
+                <tr>
+                    <td style="color:var(--text-light);">{{ forloop.counter }}</td>
+                    <td>
+                        <div style="font-weight:600;color:var(--navy);">{{ ligne.produit.nom }}</div>
+                        <div style="font-size:11px;color:var(--text-light);">Réf : {{ ligne.produit.reference }}</div>
+                    </td>
+                    <td style="text-align:right;">{{ ligne.prix_unitaire }} MRU</td>
+                    <td style="text-align:center;"><strong>{{ ligne.quantite }}</strong></td>
+                    <td style="text-align:right;font-weight:700;color:var(--navy);">{{ ligne.sous_total }} MRU</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align:center;padding:30px;color:var(--text-light);">
+                        Aucune ligne dans cette facture
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Totaux bas de page -->
+        <div style="display:flex;justify-content:flex-end;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+            <div style="min-width:300px;">
+                <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:var(--text-mid);">
+                    <span>Sous-total HT</span>
+                    <span>{{ facture.total }} MRU</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:var(--text-mid);">
+                    <span>Total payé</span>
+                    <span style="color:var(--primary);font-weight:700;">{{ facture.total_paye }} MRU</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:var(--text-mid);">
+                    <span>Reste à payer</span>
+                    <span style="color:var(--accent);font-weight:700;">{{ facture.reste_a_payer }} MRU</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:2px solid var(--primary);margin-top:8px;">
+                    <span style="font-size:17px;font-weight:800;color:var(--navy);">TOTAL TTC</span>
+                    <span style="font-size:22px;font-weight:800;color:var(--primary);">{{ facture.total }} MRU</span>
+                </div>
+            </div>
+        </div>
+
+        {% if facture.notes %}
+        <div style="margin-top:20px;padding:14px 18px;background:var(--bg);border-radius:var(--radius);border-left:3px solid var(--accent);">
+            <div style="font-size:11px;font-weight:700;color:var(--text-light);margin-bottom:4px;text-transform:uppercase;">NOTES</div>
+            <div style="font-size:13px;color:var(--text-mid);">{{ facture.notes }}</div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<!-- ═══ COLONNE DROITE ═══ -->
+<div style="display:flex;flex-direction:column;gap:16px;">
+
+    <!-- Résumé financier -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-calculator"></i> Résumé financier</div>
+        </div>
+        <div class="card-body" style="padding:16px;">
+            <div class="total-row">
+                <span>Total facture</span>
+                <span style="font-weight:700;color:var(--navy);">{{ facture.total }} MRU</span>
+            </div>
+            <div class="total-row">
+                <span>Total payé</span>
+                <span style="font-weight:700;color:var(--primary);">{{ facture.total_paye }} MRU</span>
+            </div>
+            <div class="total-row">
+                <span>Reste à payer</span>
+                <span style="font-weight:700;color:var(--accent);">{{ facture.reste_a_payer }} MRU</span>
+            </div>
+            <div class="total-row" style="border-top:2px solid var(--primary);margin-top:6px;padding-top:10px;">
+                <span style="font-weight:700;">Statut</span>
+                <span>
+                    {% if facture.statut == 'payee' %}
+                        <span class="badge badge-success">Payée</span>
+                    {% elif facture.statut == 'partiellement' %}
+                        <span class="badge badge-warning">Partielle</span>
+                    {% else %}
+                        <span class="badge badge-danger">Non payée</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        {% if facture.statut != 'payee' %}
+        <div style="padding:0 16px 16px;">
+            <a href="{% url 'stock:paiement_ajouter' facture.pk %}" class="btn btn-primary" style="width:100%;justify-content:center;">
+                <i class="fas fa-money-bill-wave"></i> Enregistrer un paiement
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Historique paiements -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-history"></i> Historique paiements</div>
+        </div>
+        <div class="card-body" style="padding:12px;">
+            {% for p in facture.paiements.all %}
+            <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--primary-light);border-radius:8px;margin-bottom:8px;border-left:3px solid var(--primary);">
+                <div style="flex:1;">
+                    <div style="font-weight:700;font-size:13px;color:var(--navy);">{{ p.montant }} MRU</div>
+                    <div style="font-size:11px;color:var(--text-light);">{{ p.get_mode_paiement_display }} — {{ p.date_paiement|date:"d/m/Y" }}</div>
+                    {% if p.reference %}
+                    <div style="font-size:11px;color:var(--text-light);">Réf : {{ p.reference }}</div>
+                    {% endif %}
+                </div>
+                <i class="fas fa-check-circle" style="color:var(--primary);font-size:18px;"></i>
+            </div>
+            {% empty %}
+            <div class="empty-state" style="padding:20px;">
+                <i class="fas fa-money-bill-wave"></i>
+                <p>Aucun paiement enregistré</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock %}

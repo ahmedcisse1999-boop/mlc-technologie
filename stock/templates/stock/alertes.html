@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Alertes stock{% endblock %}
+{% block page_title %}Alertes stock bas{% endblock %}
+{% block breadcrumb %}Analyse › Alertes{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>Alertes stock bas</h2>
+        <p>{{ alertes_count }} produit(s) sous le seuil d'alerte</p>
+    </div>
+</div>
+
+{% if produits_alerte %}
+<div class="card">
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr><th>Produit</th><th>Stock actuel</th><th>Seuil alerte</th><th>Niveau</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+                {% for p in produits_alerte %}
+                <tr>
+                    <td>
+                        <div class="product-info">
+                            <div class="product-thumb"><i class="fas fa-camera"></i></div>
+                            <div>
+                                <div class="product-name">{{ p.nom }}</div>
+                                <div class="product-ref">{{ p.reference }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><strong style="color:var(--danger)">{{ p.quantite_stock }}</strong></td>
+                    <td>{{ p.seuil_alerte }}</td>
+                    <td style="width:180px;">
+                        <div class="stock-bar">
+                            <div class="stock-bar-fill low" style="width:{% widthratio p.quantite_stock p.seuil_alerte 100 %}%"></div>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="{% url 'stock:mouvement_ajouter' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i> Approvisionner
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <i class="fas fa-check-circle" style="color:var(--success);opacity:1;font-size:56px;"></i>
+            <h3>Tout est en ordre !</h3>
+            <p>Aucun produit n'est sous le seuil d'alerte.</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

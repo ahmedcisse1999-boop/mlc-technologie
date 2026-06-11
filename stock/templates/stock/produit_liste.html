@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Produits — MLC Technologie{% endblock %}
+{% block page_title %}Produits{% endblock %}
+{% block breadcrumb %}Stock › Produits{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>Gestion des produits</h2>
+        <p>{{ produits.count }} produit(s) enregistré(s)</p>
+    </div>
+    <a href="{% url 'stock:produit_ajouter' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> nouveau produit
+    </a>
+</div>
+
+<div class="card">
+    <div class="filter-bar">
+        <div class="filter-search">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Rechercher un produit...">
+        </div>
+    </div>
+    <div class="table-wrapper">
+        <table class="table" id="produitTable">
+            <thead>
+                <tr>
+                    <th>Produit</th>
+                    <th>Catégorie</th>
+                    <th>Prix achat</th>
+                    <th>Prix vente</th>
+                    <th>Stock</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for produit in produits %}
+                <tr>
+                    <td>
+                        <div class="product-info">
+                            <div class="product-thumb">
+                                {% if produit.image %}
+                                    <img src="{{ produit.image.url }}" alt="">
+                                {% else %}
+                                    <i class="fas fa-camera"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div class="product-name">{{ produit.nom }}</div>
+                                <div class="product-ref">{{ produit.reference }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ produit.categorie|default:"—" }}</td>
+                    <td>{{ produit.prix_achat }} MRU</td>
+                    <td>{{ produit.prix_vente }} MRU</td>
+                    <td>
+                        <strong>{{ produit.quantite_stock }}</strong>
+                        <div class="stock-bar">
+                            <div class="stock-bar-fill {% if produit.quantite_stock > produit.seuil_alerte|add:5 %}high{% elif produit.quantite_stock > produit.seuil_alerte %}medium{% else %}low{% endif %}"
+                                 style="width: {% widthratio produit.quantite_stock 50 100 %}%">
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if produit.stock_bas %}
+                            <span class="badge badge-danger"><i class="fas fa-exclamation-circle"></i> Stock bas</span>
+                        {% else %}
+                            <span class="badge badge-success"><i class="fas fa-check-circle"></i> OK</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:6px;">
+    <a href="{% url 'stock:produit_detail' produit.pk %}" class="btn btn-outline btn-sm btn-icon" title="Voir">
+        <i class="fas fa-eye"></i>
+    </a>
+    <a href="{% url 'stock:produit_modifier' produit.pk %}" class="btn btn-warning btn-sm btn-icon" title="Modifier">
+        <i class="fas fa-edit"></i>
+    </a>
+    <a href="{% url 'stock:produit_supprimer' produit.pk %}" class="btn btn-danger btn-sm btn-icon" title="Supprimer">
+        <i class="fas fa-trash"></i>
+    </a>
+</div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="fas fa-camera-retro"></i>
+                            <h3>Aucun produit</h3>
+                            <p>Commencez par ajouter votre premier produit</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const val = this.value.toLowerCase();
+    document.querySelectorAll('#produitTable tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(val) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

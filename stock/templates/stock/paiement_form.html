@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% block title %}Enregistrer un paiement{% endblock %}
+{% block page_title %}Enregistrer un paiement{% endblock %}
+{% block breadcrumb %}Commerce › Factures › Paiement{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>Enregistrer un paiement</h2>
+        <p>Saisissez les détails du règlement reçu</p>
+    </div>
+    <a href="{% url 'stock:facture_detail' facture.pk %}" class="btn btn-outline">
+        <i class="fas fa-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;max-width:900px;">
+
+    <!-- Formulaire -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+        <!-- Facture concernée -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><i class="fas fa-file-invoice"></i> Facture concernée</div>
+            </div>
+            <div class="card-body">
+                <div style="background:var(--primary-light);border-radius:var(--radius);padding:14px 18px;border:1px solid rgba(26,122,46,.2);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div>
+                            <div style="font-weight:700;font-size:15px;color:var(--navy)">{{ facture.numero }}</div>
+                            <div style="font-size:13px;color:var(--text-light)">Client : {{ facture.client.nom }}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:18px;font-weight:800;color:var(--primary)">{{ facture.total }} MRU</div>
+                            <div style="font-size:12px;color:var(--text-light)">Total facture</div>
+                        </div>
+                    </div>
+                    {% with total_paye=facture.paiements.all %}
+                    {% if total_paye %}
+                    <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(26,122,46,.2);">
+                        <div style="font-size:12px;color:var(--text-mid)">Déjà payé :</div>
+                        {% for p in total_paye %}
+                        <div style="font-size:12px;color:var(--primary);font-weight:600;">+ {{ p.montant }} MRU ({{ p.get_mode_paiement_display }} — {{ p.date_paiement|date:"d/m/Y" }})</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Détails paiement -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><i class="fas fa-money-bill-wave"></i> Détails du paiement</div>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="facture" value="{{ facture.pk }}">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Montant reçu (MRU) *</label>
+                            {{ form.montant }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date du paiement *</label>
+                            {{ form.date_paiement }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Mode de paiement</label>
+                            {{ form.mode_paiement }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Référence / N° chèque</label>
+                            {{ form.reference }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notes</label>
+                        {{ form.notes }}
+                    </div>
+                    <div class="form-actions">
+                        <a href="{% url 'stock:facture_detail' facture.pk %}" class="btn btn-outline">
+                            <i class="fas fa-times"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check-circle"></i> Valider le paiement
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modes de paiement info -->
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><i class="fas fa-credit-card"></i> Modes de paiement</div>
+            </div>
+            <div class="card-body" style="padding:12px;">
+                <div class="mode-item">
+                    <div class="mode-icon" style="background:#ecfdf5;color:#059669"><i class="fas fa-money-bill-wave"></i></div>
+                    <div><div class="mode-name">Espèces</div><div class="mode-desc">Paiement direct en main propre</div></div>
+                </div>
+                <div class="mode-item">
+                    <div class="mode-icon" style="background:#eff6ff;color:#2563eb"><i class="fas fa-university"></i></div>
+                    <div><div class="mode-name">Virement</div><div class="mode-desc">Indiquer la référence bancaire</div></div>
+                </div>
+                <div class="mode-item">
+                    <div class="mode-icon" style="background:#fffbeb;color:#d97706"><i class="fas fa-money-check"></i></div>
+                    <div><div class="mode-name">Chèque</div><div class="mode-desc">Indiquer le N° de chèque</div></div>
+                </div>
+                <div class="mode-item">
+                    <div class="mode-icon" style="background:#f5f3ff;color:#7c3aed"><i class="fas fa-mobile-alt"></i></div>
+                    <div><div class="mode-name">Mobile Money</div><div class="mode-desc">Bankily, Masrvi...</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top:16px;">
+            <div class="card-body" style="background:#fffbeb;border-radius:var(--radius-lg);">
+                <div style="display:flex;gap:10px;">
+                    <i class="fas fa-exclamation-triangle" style="color:var(--accent);font-size:18px;margin-top:2px;"></i>
+                    <div style="font-size:13px;color:#92400e;line-height:1.6;">
+                        Un <strong>paiement partiel</strong> est possible — la facture passera en statut « Partiellement payée ». Elle sera clôturée automatiquement quand le montant total sera atteint.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

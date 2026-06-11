@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% block title %}{{ titre }}{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+{% block breadcrumb %}Terrain › Contrats › {{ titre }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title"><h2>{{ titre }}</h2></div>
+    <a href="{% url 'stock:contrat_liste' %}" class="btn btn-outline">
+        <i class="fas fa-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div style="max-width:700px;">
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-file-signature"></i> Contrat</div>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Référence *</label>
+                        {{ form.reference }}
+                    </div>
+
+                    <!-- Client avec bouton + -->
+                    <div class="form-group">
+                        <label class="form-label">Client *</label>
+                        <div class="input-with-btn">
+                            {{ form.client }}
+                            <button type="button" class="btn-add-inline"
+                                    onclick="openModal('clientModal')"
+                                    title="Nouveau client">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Type de contrat</label>
+                        {{ form.type_contrat }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Statut</label>
+                        {{ form.statut }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date début *</label>
+                        {{ form.date_debut }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date fin *</label>
+                        {{ form.date_fin }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Montant (MRU)</label>
+                        {{ form.montant }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    {{ form.description }}
+                </div>
+                <div class="form-actions">
+                    <a href="{% url 'stock:contrat_liste' %}" class="btn btn-outline">Annuler</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ══ MODAL CLIENT ══ -->
+<div class="modal-overlay" id="clientModal">
+    <div class="modal-box" style="max-width:500px">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fas fa-user-plus"></i> Nouveau client</div>
+            <button class="modal-close" onclick="closeModal('clientModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Nom *</label>
+                <input type="text" id="cl_nom" class="form-control" placeholder="Nom du client">
+            </div>
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Téléphone</label>
+                    <input type="text" id="cl_tel" class="form-control" placeholder="+222 XX XX XX XX">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="cl_email" class="form-control" placeholder="email@exemple.com">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Adresse</label>
+                <textarea id="cl_adresse" class="form-control" rows="2" placeholder="Adresse..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('clientModal')">Annuler</button>
+            <button class="btn btn-primary" onclick="saveClient()">
+                <i class="fas fa-save"></i> Enregistrer
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const csrfToken = '{{ csrf_token }}';
+
+function openModal(id) {
+    document.getElementById(id).classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+    document.body.style.overflow = '';
+}
+document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', function(e) {
+        if (e.target === this) closeModal(this.id);
+    });
+});
+
+function showToast(msg, type) {
+    const t = document.createElement('div');
+    t.className = `toast toast-${type}`;
+    t.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`;
+    document.body.appendChild(t);
+    setTimeout(() => t.classList.add('show'), 10);
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+function saveClient() {
+    const nom = document.getElementById('cl_nom').value.trim();
+    if (!nom) { alert('Le nom est obligatoire'); return; }
+
+    const btn = event.target;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
+    btn.disabled = true;
+
+    fetch("{% url 'stock:client_quick' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken
+        },
+        body: new URLSearchParams({
+            nom,
+            telephone: document.getElementById('cl_tel').value,
+            email:     document.getElementById('cl_email').value,
+            adresse:   document.getElementById('cl_adresse').value,
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const select = document.querySelector('select[name="client"]');
+            select.add(new Option(data.nom, data.id, true, true));
+            closeModal('clientModal');
+            showToast('Client ajouté !', 'success');
+            ['cl_nom','cl_tel','cl_email','cl_adresse'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+        } else {
+            showToast('Erreur : ' + data.errors, 'error');
+        }
+    })
+    .catch(() => showToast('Erreur de connexion !', 'error'))
+    .finally(() => {
+        btn.innerHTML = '<i class="fas fa-save"></i> Enregistrer';
+        btn.disabled = false;
+    });
+}
+</script>
+{% endblock %}

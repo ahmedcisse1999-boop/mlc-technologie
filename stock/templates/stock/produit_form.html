@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ titre }}{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+{% block breadcrumb %}Stock › Produits › {{ titre }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>{{ titre }}</h2>
+        <p>Remplissez les informations du produit</p>
+    </div>
+    <a href="{% url 'stock:produit_liste' %}" class="btn btn-outline">
+        <i class="fas fa-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="card-title"><i class="fas fa-camera-retro"></i> Informations produit</div>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Référence <span class="required">*</span></label>
+                    {{ form.reference }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nom du produit <span class="required">*</span></label>
+                    {{ form.nom }}
+                </div>
+
+                <!-- Catégorie avec + -->
+                <div class="form-group">
+                    <label class="form-label">Catégorie</label>
+                    <div class="input-with-btn">
+                        {{ form.categorie }}
+                        <button type="button" class="btn-add-inline"
+                                onclick="openModal('categorieModal')"
+                                title="Nouvelle catégorie">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Fournisseur avec + -->
+                <div class="form-group">
+                    <label class="form-label">Fournisseur</label>
+                    <div class="input-with-btn">
+                        {{ form.fournisseur }}
+                        <button type="button" class="btn-add-inline"
+                                onclick="openModal('fournisseurModal')"
+                                title="Nouveau fournisseur">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Prix d'achat (MRU)</label>
+                    {{ form.prix_achat }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Prix de vente (MRU)</label>
+                    {{ form.prix_vente }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Quantité en stock</label>
+                    {{ form.quantite_stock }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Seuil d'alerte</label>
+                    {{ form.seuil_alerte }}
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                {{ form.description }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Image du produit</label>
+                {{ form.image }}
+            </div>
+            <div class="form-actions">
+                <a href="{% url 'stock:produit_liste' %}" class="btn btn-outline">Annuler</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ══ MODAL CATÉGORIE ══ -->
+<div class="modal-overlay" id="categorieModal">
+    <div class="modal-box" style="max-width:420px">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fas fa-tags"></i> Nouvelle catégorie</div>
+            <button class="modal-close" onclick="closeModal('categorieModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Nom *</label>
+                <input type="text" id="cat_nom" class="form-control" placeholder="Nom de la catégorie">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea id="cat_desc" class="form-control" rows="2" placeholder="Description..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('categorieModal')">Annuler</button>
+            <button class="btn btn-primary" onclick="saveCategorie()">
+                <i class="fas fa-save"></i> Enregistrer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ MODAL FOURNISSEUR ══ -->
+<div class="modal-overlay" id="fournisseurModal">
+    <div class="modal-box" style="max-width:500px">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fas fa-truck"></i> Nouveau fournisseur</div>
+            <button class="modal-close" onclick="closeModal('fournisseurModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Nom *</label>
+                <input type="text" id="f_nom" class="form-control" placeholder="Nom du fournisseur">
+            </div>
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Téléphone</label>
+                    <input type="text" id="f_tel" class="form-control" placeholder="+222 XX XX XX XX">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="f_email" class="form-control" placeholder="email@exemple.com">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Adresse</label>
+                <textarea id="f_adresse" class="form-control" rows="2"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('fournisseurModal')">Annuler</button>
+            <button class="btn btn-primary" onclick="saveFournisseur()">
+                <i class="fas fa-save"></i> Enregistrer
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const csrfToken = '{{ csrf_token }}';
+
+function openModal(id) {
+    document.getElementById(id).classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+    document.body.style.overflow = '';
+}
+document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', function(e) {
+        if (e.target === this) closeModal(this.id);
+    });
+});
+
+function showToast(msg, type) {
+    const t = document.createElement('div');
+    t.className = `toast toast-${type}`;
+    t.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`;
+    document.body.appendChild(t);
+    setTimeout(() => t.classList.add('show'), 10);
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+function saveCategorie() {
+    const nom = document.getElementById('cat_nom').value.trim();
+    if (!nom) { alert('Le nom est obligatoire'); return; }
+    fetch("{% url 'stock:categorie_quick' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken },
+        body: new URLSearchParams({ nom, description: document.getElementById('cat_desc').value })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const select = document.querySelector('select[name="categorie"]');
+            select.add(new Option(data.nom, data.id, true, true));
+            closeModal('categorieModal');
+            showToast('Catégorie ajoutée !', 'success');
+            document.getElementById('cat_nom').value = '';
+            document.getElementById('cat_desc').value = '';
+        } else {
+            showToast('Erreur : ' + data.errors, 'error');
+        }
+    });
+}
+
+function saveFournisseur() {
+    const nom = document.getElementById('f_nom').value.trim();
+    if (!nom) { alert('Le nom est obligatoire'); return; }
+    fetch("{% url 'stock:fournisseur_quick' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken },
+        body: new URLSearchParams({
+            nom,
+            telephone: document.getElementById('f_tel').value,
+            email:     document.getElementById('f_email').value,
+            adresse:   document.getElementById('f_adresse').value,
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const select = document.querySelector('select[name="fournisseur"]');
+            select.add(new Option(data.nom, data.id, true, true));
+            closeModal('fournisseurModal');
+            showToast('Fournisseur ajouté !', 'success');
+            ['f_nom','f_tel','f_email','f_adresse'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+        } else {
+            showToast('Erreur : ' + data.errors, 'error');
+        }
+    });
+}
+</script>
+{% endblock %}

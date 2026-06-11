@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}Catégories{% endblock %}
+{% block page_title %}Catégories{% endblock %}
+{% block breadcrumb %}Stock › Catégories{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>Gestion des catégories</h2>
+        <p>{{ categories.count }} catégorie(s)</p>
+    </div>
+    <a href="{% url 'stock:categorie_ajouter' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Ajouter
+    </a>
+</div>
+
+<div class="card">
+    <div class="filter-bar">
+        <div class="filter-search">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Rechercher une catégorie...">
+        </div>
+    </div>
+    <div class="table-wrapper">
+        <table class="table" id="catTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Nom</th>
+                    <th>Description</th>
+                    <th>Nb produits</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat in categories %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <div style="width:36px;height:36px;background:var(--primary-light);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <i class="fas fa-tag" style="color:var(--primary);font-size:14px;"></i>
+                            </div>
+                            <strong>{{ cat.nom }}</strong>
+                        </div>
+                    </td>
+                    <td>{{ cat.description|default:"—"|truncatechars:50 }}</td>
+                    <td>
+                        <span class="badge badge-info">
+                            <i class="fas fa-camera"></i>
+                            {{ cat.produit_set.count }} produit(s)
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:6px;">
+                            <a href="{% url 'stock:categorie_detail' cat.pk %}"
+                               class="btn btn-outline btn-sm btn-icon" title="Voir">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'stock:categorie_modifier' cat.pk %}"
+                               class="btn btn-warning btn-sm btn-icon" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'stock:categorie_supprimer' cat.pk %}"
+                               class="btn btn-danger btn-sm btn-icon" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <i class="fas fa-tags"></i>
+                            <h3>Aucune catégorie</h3>
+                            <p>Ajoutez votre première catégorie</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const val = this.value.toLowerCase();
+    document.querySelectorAll('#catTable tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(val) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

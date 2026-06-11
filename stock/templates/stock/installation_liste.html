@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}Installations{% endblock %}
+{% block page_title %}Installations{% endblock %}
+{% block breadcrumb %}Terrain › Installations{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>Gestion des installations</h2>
+        <p>{{ installations.count }} installation(s)</p>
+    </div>
+    <a href="{% url 'stock:installation_ajouter' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nouvelle installation
+    </a>
+</div>
+
+<!-- Stats rapides -->
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
+    <div class="stat-card green">
+        <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+        <div>
+            <div class="stat-value">{{ installations|length }}</div>
+            <div class="stat-label">Total</div>
+        </div>
+    </div>
+    <div class="stat-card navy">
+        <div class="stat-icon navy"><i class="fas fa-spinner"></i></div>
+        <div>
+            <div class="stat-value">
+                {% for i in installations %}{% if i.statut == 'en_cours' %}{% if forloop.first %}0{% endif %}{% endif %}{% endfor %}
+                {{ installations|length }}
+            </div>
+            <div class="stat-label">En cours</div>
+        </div>
+    </div>
+    <div class="stat-card orange">
+        <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+        <div>
+            <div class="stat-value">—</div>
+            <div class="stat-label">Planifiées</div>
+        </div>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-icon green"><i class="fas fa-flag-checkered"></i></div>
+        <div>
+            <div class="stat-value">—</div>
+            <div class="stat-label">Terminées</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="filter-bar">
+        <div class="filter-search">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Rechercher une installation...">
+        </div>
+    </div>
+    <div class="table-wrapper">
+        <table class="table" id="installTable">
+            <thead>
+                <tr>
+                    <th>Référence</th>
+                    <th>Client</th>
+                    <th>Site</th>
+                    <th>Technicien</th>
+                    <th>Date prévue</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inst in installations %}
+                <tr>
+                    <td><strong>{{ inst.reference }}</strong></td>
+                    <td>{{ inst.client.nom }}</td>
+                    <td>{{ inst.site|default:"—" }}</td>
+                    <td>{{ inst.technicien|default:"—" }}</td>
+                    <td>{{ inst.date_prevue|date:"d/m/Y" }}</td>
+                    <td>
+                        {% if inst.statut == 'termine' %}
+                            <span class="badge badge-success"><i class="fas fa-check"></i> Terminé</span>
+                        {% elif inst.statut == 'en_cours' %}
+                            <span class="badge badge-info"><i class="fas fa-spinner"></i> En cours</span>
+                        {% elif inst.statut == 'planifie' %}
+                            <span class="badge badge-warning"><i class="fas fa-clock"></i> Planifié</span>
+                        {% else %}
+                            <span class="badge badge-danger"><i class="fas fa-times"></i> Annulé</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:6px;">
+                            <a href="{% url 'stock:installation_detail' inst.pk %}" class="btn btn-outline btn-sm btn-icon" title="Voir">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'stock:installation_modifier' inst.pk %}" class="btn btn-warning btn-sm btn-icon" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'stock:installation_supprimer' inst.pk %}" class="btn btn-danger btn-sm btn-icon" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="fas fa-tools"></i>
+                            <h3>Aucune installation</h3>
+                            <p>Créez votre première installation</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const val = this.value.toLowerCase();
+    document.querySelectorAll('#installTable tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(val) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

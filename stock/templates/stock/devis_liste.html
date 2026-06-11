@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Devis{% endblock %}
+{% block page_title %}Devis{% endblock %}
+{% block breadcrumb %}Commerce › Devis{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>Gestion des devis</h2>
+        <p>{{ devis_list.count }} devis</p>
+    </div>
+    <a href="{% url 'stock:devis_ajouter' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nouveau devis
+    </a>
+</div>
+
+<div class="card">
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>N° Devis</th>
+                    <th>Client</th>
+                    <th>Date création</th>
+                    <th>Validité</th>
+                    <th>Total</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in devis_list %}
+                <tr>
+                    <td><strong>{{ d.numero }}</strong></td>
+                    <td>{{ d.client.nom }}</td>
+                    <td>{{ d.date_creation|date:"d/m/Y" }}</td>
+                    <td>{{ d.date_validite|date:"d/m/Y" }}</td>
+                    <td><strong>{{ d.total }} MRU</strong></td>
+                    <td>
+                        {% if d.statut == 'accepte' %}
+                            <span class="badge badge-success">Accepté</span>
+                        {% elif d.statut == 'envoye' %}
+                            <span class="badge badge-info">Envoyé</span>
+                        {% elif d.statut == 'refuse' %}
+                            <span class="badge badge-danger">Refusé</span>
+                        {% else %}
+                            <span class="badge badge-gray">Brouillon</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:6px;">
+                            <a href="{% url 'stock:devis_detail' d.pk %}" class="btn btn-outline btn-sm btn-icon" title="Voir">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'stock:devis_pdf' d.pk %}" class="btn btn-primary btn-sm btn-icon" title="PDF">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+
+                            <a href="{% url 'stock:devis_supprimer' d.pk %}" class="btn btn-danger btn-sm btn-icon" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="fas fa-file-alt"></i>
+                            <h3>Aucun devis</h3>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Factures{% endblock %}
+{% block page_title %}Factures{% endblock %}
+{% block breadcrumb %}Commerce › Factures{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>Gestion des factures</h2>
+        <p>{{ factures.count }} facture(s)</p>
+    </div>
+    <a href="{% url 'stock:facture_ajouter' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nouvelle facture
+    </a>
+</div>
+
+<div class="card">
+    <div class="filter-bar">
+        <div class="filter-search">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Rechercher une facture...">
+        </div>
+    </div>
+    <div class="table-wrapper">
+        <table class="table" id="factureTable">
+            <thead>
+                <tr>
+                    <th>N° Facture</th>
+                    <th>Client</th>
+                    <th>Date création</th>
+                    <th>Échéance</th>
+                    <th>Total</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in factures %}
+                <tr>
+                    <td><strong>{{ f.numero }}</strong></td>
+                    <td>{{ f.client.nom }}</td>
+                    <td>{{ f.date_creation|date:"d/m/Y" }}</td>
+                    <td>{{ f.date_echeance|date:"d/m/Y" }}</td>
+                    <td><strong>{{ f.total }} MRU</strong></td>
+                    <td>
+                        {% if f.statut == 'payee' %}
+                            <span class="badge badge-success"><i class="fas fa-check-circle"></i> Payée</span>
+                        {% elif f.statut == 'partiellement' %}
+                            <span class="badge badge-warning"><i class="fas fa-clock"></i> Partielle</span>
+                        {% else %}
+                            <span class="badge badge-danger"><i class="fas fa-times-circle"></i> Non payée</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:6px;">
+                            <a href="{% url 'stock:facture_detail' f.pk %}" class="btn btn-outline btn-sm btn-icon" title="Voir">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'stock:facture_pdf' f.pk %}" class="btn btn-primary btn-sm btn-icon" title="PDF">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                            <a href="{% url 'stock:facture_supprimer' f.pk %}" class="btn btn-danger btn-sm btn-icon" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <h3>Aucune facture</h3>
+                            <p>Commencez par créer votre première facture</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const val = this.value.toLowerCase();
+    document.querySelectorAll('#factureTable tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(val) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

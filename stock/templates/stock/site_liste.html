@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Sites{% endblock %}
+{% block page_title %}Sites / Carte{% endblock %}
+{% block breadcrumb %}Terrain › Sites{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>Sites clients</h2>
+        <p>{{ sites.count }} site(s) enregistré(s)</p>
+    </div>
+    <a href="{% url 'stock:site_ajouter' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nouveau site
+    </a>
+</div>
+
+<div class="card">
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nom du site</th>
+                    <th>Client</th>
+                    <th>Adresse</th>
+                    <th>Coordonnées</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in sites %}
+                <tr>
+                    <td><strong>{{ s.nom }}</strong></td>
+                    <td>{{ s.client.nom }}</td>
+                    <td>{{ s.adresse|truncatechars:40 }}</td>
+                    <td>
+                        {% if s.latitude and s.longitude %}
+                        <a href="https://maps.google.com/?q={{ s.latitude }},{{ s.longitude }}"
+                           target="_blank" class="btn btn-outline btn-sm">
+                            <i class="fas fa-map-marker-alt"></i> Voir carte
+                        </a>
+                        {% else %}
+                        <span style="color:var(--text-light);font-size:12px;">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+    <div style="display:flex;gap:6px;">
+        <a href="{% url 'stock:site_detail' s.pk %}"
+           class="btn btn-outline btn-sm btn-icon" title="Voir">
+            <i class="fas fa-eye"></i>
+        </a>
+        <a href="{% url 'stock:site_modifier' s.pk %}"
+           class="btn btn-warning btn-sm btn-icon" title="Modifier">
+            <i class="fas fa-edit"></i>
+        </a>
+        <a href="{% url 'stock:site_supprimer' s.pk %}"
+           class="btn btn-danger btn-sm btn-icon" title="Supprimer">
+            <i class="fas fa-trash"></i>
+        </a>
+    </div>
+</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <h3>Aucun site</h3>
+                            <p>Ajoutez des sites d'installation clients</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

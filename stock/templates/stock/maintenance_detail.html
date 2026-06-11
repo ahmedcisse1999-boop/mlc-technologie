@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}{{ maintenance.reference }}{% endblock %}
+{% block page_title %}Ticket SAV{% endblock %}
+{% block breadcrumb %}Terrain › Maintenance › {{ maintenance.reference }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>{{ maintenance.reference }}</h2>
+        <p>{{ maintenance.client.nom }}</p>
+    </div>
+    <div style="display:flex;gap:10px;">
+        <a href="{% url 'stock:maintenance_liste' %}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+        <a href="{% url 'stock:maintenance_modifier' maintenance.pk %}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Modifier
+        </a>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 280px;gap:20px;">
+
+<div class="card">
+    <div class="card-body">
+        <div class="form-grid-2" style="margin-bottom:20px;">
+            <div>
+                <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Client</div>
+                <div style="font-weight:600;color:var(--navy);">{{ maintenance.client.nom }}</div>
+            </div>
+            <div>
+                <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Technicien</div>
+                <div style="font-weight:600;color:var(--navy);">{{ maintenance.technicien|default:"—" }}</div>
+            </div>
+            <div>
+                <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Date signalement</div>
+                <div style="font-weight:600;color:var(--navy);">{{ maintenance.date_signalement|date:"d/m/Y" }}</div>
+            </div>
+            <div>
+                <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Date intervention</div>
+                <div style="font-weight:600;color:var(--navy);">{{ maintenance.date_intervention|date:"d/m/Y"|default:"—" }}</div>
+            </div>
+            <div>
+                <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Site</div>
+                <div style="font-weight:600;color:var(--navy);">{{ maintenance.site|default:"—" }}</div>
+            </div>
+            <div>
+                <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Installation</div>
+                <div style="font-weight:600;color:var(--navy);">{{ maintenance.installation|default:"—" }}</div>
+            </div>
+        </div>
+
+        <div style="padding:16px;background:var(--bg);border-radius:var(--radius);border-left:3px solid var(--navy);margin-bottom:12px;">
+            <div style="font-size:11px;font-weight:700;color:var(--text-light);margin-bottom:6px;">DESCRIPTION DU PROBLÈME</div>
+            <div style="font-size:13px;color:var(--text-dark);">{{ maintenance.description }}</div>
+        </div>
+
+        {% if maintenance.solution %}
+        <div style="padding:16px;background:var(--primary-light);border-radius:var(--radius);border-left:3px solid var(--primary);">
+            <div style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:6px;">SOLUTION APPORTÉE</div>
+            <div style="font-size:13px;color:var(--text-dark);">{{ maintenance.solution }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px;">
+    <div class="card">
+        <div class="card-body" style="padding:20px;text-align:center;">
+            <div style="font-size:12px;color:var(--text-light);margin-bottom:8px;">TYPE</div>
+            {% if maintenance.type_maintenance == 'urgence' %}
+                <span class="badge badge-danger" style="font-size:13px;padding:6px 14px;">🚨 Urgence</span>
+            {% elif maintenance.type_maintenance == 'corrective' %}
+                <span class="badge badge-warning" style="font-size:13px;padding:6px 14px;">🔧 Corrective</span>
+            {% else %}
+                <span class="badge badge-info" style="font-size:13px;padding:6px 14px;">🛡️ Préventive</span>
+            {% endif %}
+
+            <div style="font-size:12px;color:var(--text-light);margin:16px 0 8px;">PRIORITÉ</div>
+            {% if maintenance.priorite == 'urgente' %}
+                <span class="badge badge-danger" style="font-size:13px;padding:6px 14px;"><i class="fas fa-fire"></i> Urgente</span>
+            {% elif maintenance.priorite == 'haute' %}
+                <span class="badge badge-warning" style="font-size:13px;padding:6px 14px;"><i class="fas fa-arrow-up"></i> Haute</span>
+            {% elif maintenance.priorite == 'normale' %}
+                <span class="badge badge-info" style="font-size:13px;padding:6px 14px;">Normale</span>
+            {% else %}
+                <span class="badge badge-gray" style="font-size:13px;padding:6px 14px;">Basse</span>
+            {% endif %}
+
+            <div style="font-size:12px;color:var(--text-light);margin:16px 0 8px;">STATUT</div>
+            {% if maintenance.statut == 'resolu' %}
+                <span class="badge badge-success" style="font-size:13px;padding:6px 14px;">✓ Résolu</span>
+            {% elif maintenance.statut == 'en_cours' %}
+                <span class="badge badge-info" style="font-size:13px;padding:6px 14px;">⚙️ En cours</span>
+            {% elif maintenance.statut == 'ouvert' %}
+                <span class="badge badge-warning" style="font-size:13px;padding:6px 14px;">📋 Ouvert</span>
+            {% else %}
+                <span class="badge badge-gray" style="font-size:13px;padding:6px 14px;">Fermé</span>
+            {% endif %}
+
+            <div style="margin-top:20px;">
+                <a href="{% url 'stock:maintenance_modifier' maintenance.pk %}" class="btn btn-primary" style="width:100%;justify-content:center;">
+                    <i class="fas fa-edit"></i> Mettre à jour
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

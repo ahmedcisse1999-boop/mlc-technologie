@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+{% block title %}{{ site.nom }}{% endblock %}
+{% block page_title %}Site{% endblock %}
+{% block breadcrumb %}Terrain › Sites › {{ site.nom }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>{{ site.nom }}</h2>
+        <p>{{ site.client.nom }}</p>
+    </div>
+    <div style="display:flex;gap:10px;">
+        <a href="{% url 'stock:site_liste' %}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+        <a href="{% url 'stock:site_modifier' site.pk %}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Modifier
+        </a>
+        {% if site.latitude and site.longitude %}
+        <a href="https://maps.google.com/?q={{ site.latitude }},{{ site.longitude }}"
+           target="_blank" class="btn btn-navy">
+            <i class="fas fa-map-marker-alt"></i> Google Maps
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start;">
+
+<!-- ═══ DÉTAILS SITE ═══ -->
+<div style="display:flex;flex-direction:column;gap:16px;">
+
+    <!-- Infos -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-map-marker-alt"></i> Informations du site</div>
+        </div>
+        <div class="card-body">
+            <div style="display:flex;align-items:center;gap:20px;margin-bottom:24px;">
+                <div style="width:70px;height:70px;border-radius:16px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="fas fa-building" style="font-size:30px;color:var(--primary);"></i>
+                </div>
+                <div>
+                    <div style="font-size:22px;font-weight:800;color:var(--text-dark);">{{ site.nom }}</div>
+                    <div style="font-size:13px;color:var(--text-light);margin-top:4px;">
+                        <i class="fas fa-user" style="color:var(--primary);"></i>
+                        Client : <strong>{{ site.client.nom }}</strong>
+                    </div>
+                    <div style="font-size:13px;color:var(--text-light);margin-top:2px;">
+                        <i class="fas fa-calendar" style="color:var(--primary);"></i>
+                        Ajouté le {{ site.date_ajout|date:"d/m/Y" }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div style="background:var(--bg);border-radius:10px;padding:14px;">
+                    <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700;margin-bottom:6px;">
+                        <i class="fas fa-map-pin" style="color:var(--primary);"></i> Adresse
+                    </div>
+                    <div style="font-weight:600;color:var(--text-dark);font-size:13px;">
+                        {{ site.adresse|default:"—" }}
+                    </div>
+                </div>
+                <div style="background:var(--bg);border-radius:10px;padding:14px;">
+                    <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700;margin-bottom:6px;">
+                        <i class="fas fa-crosshairs" style="color:var(--primary);"></i> Coordonnées GPS
+                    </div>
+                    {% if site.latitude and site.longitude %}
+                    <div style="font-weight:600;color:var(--text-dark);font-size:13px;">
+                        {{ site.latitude }}, {{ site.longitude }}
+                    </div>
+                    <a href="https://maps.google.com/?q={{ site.latitude }},{{ site.longitude }}"
+                       target="_blank" style="font-size:12px;color:var(--primary);margin-top:4px;display:block;">
+                        <i class="fas fa-external-link-alt"></i> Ouvrir dans Maps
+                    </a>
+                    {% else %}
+                    <div style="color:var(--text-light);font-size:13px;">Non renseigné</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if site.description %}
+            <div style="margin-top:14px;background:var(--primary-light);border-radius:10px;padding:14px;border-left:3px solid var(--primary);">
+                <div style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:4px;text-transform:uppercase;">Description</div>
+                <div style="font-size:13px;color:var(--text-mid);">{{ site.description }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Carte Google Maps intégrée -->
+    {% if site.latitude and site.longitude %}
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-map"></i> Localisation</div>
+        </div>
+        <div style="height:300px;overflow:hidden;">
+            <iframe
+                width="100%"
+                height="300"
+                frameborder="0"
+                style="border:0;"
+                src="https://maps.google.com/maps?q={{ site.latitude }},{{ site.longitude }}&z=15&output=embed"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Installations sur ce site -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-tools"></i> Installations sur ce site</div>
+            <a href="{% url 'stock:installation_ajouter' %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> Nouvelle
+            </a>
+        </div>
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Référence</th>
+                        <th>Technicien</th>
+                        <th>Date prévue</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inst in site.installation_set.all %}
+                    <tr>
+                        <td><strong>{{ inst.reference }}</strong></td>
+                        <td>{{ inst.technicien|default:"—" }}</td>
+                        <td>{{ inst.date_prevue|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if inst.statut == 'termine' %}
+                                <span class="badge badge-success"><i class="fas fa-check"></i> Terminé</span>
+                            {% elif inst.statut == 'en_cours' %}
+                                <span class="badge badge-info"><i class="fas fa-spinner"></i> En cours</span>
+                            {% elif inst.statut == 'planifie' %}
+                                <span class="badge badge-warning"><i class="fas fa-clock"></i> Planifié</span>
+                            {% else %}
+                                <span class="badge badge-danger">Annulé</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'stock:installation_detail' inst.pk %}"
+                               class="btn btn-outline btn-sm btn-icon">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state" style="padding:20px;">
+                                <i class="fas fa-tools"></i>
+                                <p>Aucune installation sur ce site</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Maintenances sur ce site -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-wrench"></i> Tickets SAV sur ce site</div>
+            <a href="{% url 'stock:maintenance_ajouter' %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> Nouveau ticket
+            </a>
+        </div>
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Référence</th>
+                        <th>Type</th>
+                        <th>Priorité</th>
+                        <th>Date</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in site.maintenance_set.all %}
+                    <tr>
+                        <td><strong>{{ m.reference }}</strong></td>
+                        <td>
+                            {% if m.type_maintenance == 'urgence' %}
+                                <span class="badge badge-danger">Urgence</span>
+                            {% elif m.type_maintenance == 'corrective' %}
+                                <span class="badge badge-warning">Corrective</span>
+                            {% else %}
+                                <span class="badge badge-info">Préventive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if m.priorite == 'urgente' %}
+                                <span class="badge badge-danger"><i class="fas fa-fire"></i> Urgente</span>
+                            {% elif m.priorite == 'haute' %}
+                                <span class="badge badge-warning">Haute</span>
+                            {% else %}
+                                <span class="badge badge-gray">{{ m.get_priorite_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ m.date_signalement|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if m.statut == 'resolu' %}
+                                <span class="badge badge-success">Résolu</span>
+                            {% elif m.statut == 'en_cours' %}
+                                <span class="badge badge-info">En cours</span>
+                            {% elif m.statut == 'ouvert' %}
+                                <span class="badge badge-warning">Ouvert</span>
+                            {% else %}
+                                <span class="badge badge-gray">Fermé</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'stock:maintenance_detail' m.pk %}"
+                               class="btn btn-outline btn-sm btn-icon">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state" style="padding:20px;">
+                                <i class="fas fa-wrench"></i>
+                                <p>Aucun ticket SAV sur ce site</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- ═══ COLONNE DROITE ═══ -->
+<div style="display:flex;flex-direction:column;gap:16px;">
+
+    <!-- Résumé -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-info-circle"></i> Résumé</div>
+        </div>
+        <div class="card-body" style="padding:16px;">
+            <div class="total-row">
+                <span>Client</span>
+                <span style="font-weight:700;color:var(--primary);">{{ site.client.nom }}</span>
+            </div>
+            <div class="total-row">
+                <span>Installations</span>
+                <span style="font-weight:700;">{{ site.installation_set.count }}</span>
+            </div>
+            <div class="total-row">
+                <span>Tickets SAV</span>
+                <span style="font-weight:700;">{{ site.maintenance_set.count }}</span>
+            </div>
+            <div class="total-row">
+                <span>GPS</span>
+                <span style="font-weight:700;">
+                    {% if site.latitude and site.longitude %}
+                        <span class="badge badge-success"><i class="fas fa-check"></i> Défini</span>
+                    {% else %}
+                        <span class="badge badge-gray">Non défini</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-user"></i> Client</div>
+        </div>
+        <div class="card-body" style="padding:16px;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+                <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0;">
+                    {{ site.client.nom|first|upper }}
+                </div>
+                <div>
+                    <div style="font-weight:700;color:var(--text-dark);">{{ site.client.nom }}</div>
+                    <div style="font-size:12px;color:var(--text-light);">{{ site.client.telephone|default:"—" }}</div>
+                </div>
+            </div>
+            <a href="{% url 'stock:client_detail' site.client.pk %}"
+               class="btn btn-outline" style="width:100%;justify-content:center;">
+                <i class="fas fa-eye"></i> Voir le client
+            </a>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-bolt"></i> Actions</div>
+        </div>
+        <div class="card-body" style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+            <a href="{% url 'stock:site_modifier' site.pk %}"
+               class="btn btn-warning" style="justify-content:center;">
+                <i class="fas fa-edit"></i> Modifier le site
+            </a>
+            <a href="{% url 'stock:installation_ajouter' %}"
+               class="btn btn-primary" style="justify-content:center;">
+                <i class="fas fa-tools"></i> Nouvelle installation
+            </a>
+            <a href="{% url 'stock:maintenance_ajouter' %}"
+               class="btn btn-navy" style="justify-content:center;">
+                <i class="fas fa-wrench"></i> Nouveau ticket SAV
+            </a>
+            <a href="{% url 'stock:site_supprimer' site.pk %}"
+               class="btn btn-danger" style="justify-content:center;">
+                <i class="fas fa-trash"></i> Supprimer le site
+            </a>
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock %}

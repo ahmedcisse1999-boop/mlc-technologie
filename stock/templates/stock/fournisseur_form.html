@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}{{ titre }}{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+{% block breadcrumb %}Commerce › Fournisseurs › {{ titre }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>{{ titre }}</h2>
+        <p>Informations du fournisseur</p>
+    </div>
+    <a href="{% url 'stock:fournisseur_liste' %}" class="btn btn-outline">
+        <i class="fas fa-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div style="max-width:680px;">
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-truck"></i> Fournisseur</div>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Nom <span class="required">*</span></label>
+                    {{ form.nom }}
+                </div>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Téléphone</label>
+                        {{ form.telephone }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        {{ form.email }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Adresse</label>
+                    {{ form.adresse }}
+                </div>
+                <div class="form-actions">
+                    <a href="{% url 'stock:fournisseur_liste' %}" class="btn btn-outline">
+                        <i class="fas fa-times"></i> Annuler
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

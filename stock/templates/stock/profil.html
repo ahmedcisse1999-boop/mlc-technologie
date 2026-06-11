@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% block title %}Mon Profil{% endblock %}
+{% block page_title %}Mon Profil{% endblock %}
+{% block breadcrumb %}Paramètres › Profil{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>Mon Profil</h2>
+        <p>Gérez vos informations personnelles</p>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start;">
+
+    <!-- Photo profil -->
+    <div class="card">
+        <div class="card-body" style="text-align:center;padding:32px 20px;">
+            <div style="position:relative;display:inline-block;margin-bottom:20px;">
+                {% if profil.photo %}
+                <img src="{{ profil.photo.url }}" alt="Photo"
+                     style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid var(--primary);box-shadow:0 4px 16px rgba(26,122,46,.25);">
+                {% else %}
+                <div style="width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:48px;color:#fff;margin:0 auto;box-shadow:0 4px 16px rgba(26,122,46,.25);">
+                    <i class="fas fa-user"></i>
+                </div>
+                {% endif %}
+                <label for="photoInput" style="position:absolute;bottom:0;right:0;width:34px;height:34px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);">
+                    <i class="fas fa-camera" style="color:#fff;font-size:13px;"></i>
+                </label>
+            </div>
+
+            <div style="font-size:18px;font-weight:800;color:var(--navy);">
+                {{ request.user.get_full_name|default:request.user.username }}
+            </div>
+            <div style="font-size:13px;color:var(--text-light);margin-top:4px;">
+                {{ profil.poste|default:"Administrateur" }}
+            </div>
+            <div style="margin-top:12px;">
+                <span class="badge badge-success">
+                    <i class="fas fa-check-circle"></i> Connecté
+                </span>
+            </div>
+
+            <!-- Infos rapides -->
+            <div style="margin-top:20px;text-align:left;background:var(--bg);border-radius:10px;padding:14px;">
+                <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-mid);margin-bottom:8px;">
+                    <i class="fas fa-user" style="color:var(--primary);width:16px;"></i>
+                    {{ request.user.username }}
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-mid);margin-bottom:8px;">
+                    <i class="fas fa-envelope" style="color:var(--primary);width:16px;"></i>
+                    {{ request.user.email|default:"—" }}
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-mid);">
+                    <i class="fas fa-phone" style="color:var(--primary);width:16px;"></i>
+                    {{ profil.telephone|default:"—" }}
+                </div>
+            </div>
+
+            <!-- Déconnexion -->
+            <a href="{% url 'stock:logout' %}" class="btn btn-danger" style="width:100%;justify-content:center;margin-top:16px;">
+                <i class="fas fa-sign-out-alt"></i> Se déconnecter
+            </a>
+        </div>
+    </div>
+
+    <!-- Formulaire modification -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-edit"></i> Modifier mes informations</div>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Input photo caché -->
+                <input type="file" id="photoInput" name="photo" accept="image/*" style="display:none"
+                       onchange="previewPhoto(this)">
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Prénom</label>
+                        <input type="text" name="first_name" class="form-control"
+                               value="{{ request.user.first_name }}" placeholder="Votre prénom">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nom</label>
+                        <input type="text" name="last_name" class="form-control"
+                               value="{{ request.user.last_name }}" placeholder="Votre nom">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control"
+                               value="{{ request.user.email }}" placeholder="email@exemple.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Téléphone</label>
+                        <input type="text" name="telephone" class="form-control"
+                               value="{{ profil.telephone }}" placeholder="+222 XX XX XX XX">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Poste / Fonction</label>
+                    <input type="text" name="poste" class="form-control"
+                           value="{{ profil.poste }}" placeholder="Ex: Administrateur, Gérant...">
+                </div>
+
+                <!-- Photo preview -->
+                <div class="form-group">
+                    <label class="form-label">Photo de profil</label>
+                    <div style="display:flex;align-items:center;gap:14px;">
+                        <div id="photoPreview" style="width:60px;height:60px;border-radius:50%;overflow:hidden;border:3px solid var(--primary);flex-shrink:0;">
+                            {% if profil.photo %}
+                            <img src="{{ profil.photo.url }}" style="width:100%;height:100%;object-fit:cover;">
+                            {% else %}
+                            <div style="width:100%;height:100%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;">
+                                <i class="fas fa-user" style="color:var(--primary);font-size:22px;"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <label for="photoInput" class="btn btn-outline" style="cursor:pointer;">
+                            <i class="fas fa-upload"></i> Choisir une photo
+                        </label>
+                        <span id="photoName" style="font-size:12px;color:var(--text-light);">Aucun fichier sélectionné</span>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Enregistrer les modifications
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewPhoto(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('photoPreview');
+            preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+            document.getElementById('photoName').textContent = input.files[0].name;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Confirmer la suppression{% endblock %}
+{% block page_title %}Suppression{% endblock %}
+
+{% block content %}
+<div style="max-width:500px;margin:60px auto;">
+    <div class="card">
+        <div class="card-body" style="text-align:center;padding:40px;">
+            <div style="font-size:48px;color:var(--danger);margin-bottom:16px;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 style="font-size:18px;margin-bottom:8px;">Confirmer la suppression</h3>
+            <p style="color:var(--text-light);margin-bottom:24px;">
+                Voulez-vous vraiment supprimer <strong>{{ objet }}</strong> ? Cette action est irréversible.
+            </p>
+            <form method="post" style="display:flex;gap:12px;justify-content:center;">
+                {% csrf_token %}
+                <a href="javascript:history.back()" class="btn btn-outline">
+                    <i class="fas fa-times"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Supprimer
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

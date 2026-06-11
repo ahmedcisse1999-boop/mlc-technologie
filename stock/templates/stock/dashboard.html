@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard — MLC Technologie{% endblock %}
+
+{% block page_title %}Tableau de bord{% endblock %}
+{% block breadcrumb %}Accueil{% endblock %}
+
+{% block content %}
+
+<!-- ── Stat Cards ── -->
+<div class="stats-grid">
+
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-camera-retro"></i>
+        </div>
+        <div class="stat-info">
+            <div class="stat-value">{{ total_produits }}</div>
+            <div class="stat-label">Produits en stock</div>
+            <div class="stat-change up">
+                <i class="fas fa-arrow-up"></i> Actifs
+            </div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-info">
+            <div class="stat-value">{{ alertes_count }}</div>
+            <div class="stat-label">Alertes stock bas</div>
+            <div class="stat-change down">
+                <i class="fas fa-arrow-down"></i> À réapprovisionner
+            </div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-info">
+            <div class="stat-value">{{ total_clients }}</div>
+            <div class="stat-label">Clients</div>
+            <div class="stat-change up">
+                <i class="fas fa-arrow-up"></i> Enregistrés
+            </div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon purple">
+            <i class="fas fa-file-invoice-dollar"></i>
+        </div>
+        <div class="stat-info">
+            <div class="stat-value">{{ total_factures }}</div>
+            <div class="stat-label">Factures ce mois</div>
+            <div class="stat-change up">
+                <i class="fas fa-arrow-up"></i> Total
+            </div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon red">
+            <i class="fas fa-truck"></i>
+        </div>
+        <div class="stat-info">
+            <div class="stat-value">{{ total_fournisseurs }}</div>
+            <div class="stat-label">Fournisseurs</div>
+            <div class="stat-change up">
+                <i class="fas fa-check"></i> Actifs
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ── Dashboard Grid ── -->
+<div class="dashboard-grid">
+
+    <!-- Derniers mouvements -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-exchange-alt"></i>
+                Derniers mouvements de stock
+            </div>
+            <a href="{% url 'stock:mouvement_liste' %}" class="btn btn-outline btn-sm">
+                Voir tout
+            </a>
+        </div>
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th>Type</th>
+                        <th>Quantité</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mvt in derniers_mouvements %}
+                    <tr>
+                        <td>
+                            <div class="product-info">
+                                <div class="product-thumb">
+                                    {% if mvt.produit.image %}
+                                        <img src="{{ mvt.produit.image.url }}" alt="">
+                                    {% else %}
+                                        <i class="fas fa-camera"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="product-name">{{ mvt.produit.nom }}</div>
+                                    <div class="product-ref">{{ mvt.produit.reference }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if mvt.type_mouvement == 'entree' %}
+                                <span class="badge badge-success">
+                                    <i class="fas fa-arrow-down"></i> Entrée
+                                </span>
+                            {% else %}
+                                <span class="badge badge-danger">
+                                    <i class="fas fa-arrow-up"></i> Sortie
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ mvt.quantite }}</strong></td>
+                        <td>{{ mvt.date|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">
+                            <div class="empty-state" style="padding:30px">
+                                <i class="fas fa-inbox"></i>
+                                <p>Aucun mouvement pour l'instant</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Alertes stock bas -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-bell" style="color:var(--danger)"></i>
+                Alertes stock bas
+            </div>
+            <a href="{% url 'stock:alertes' %}" class="btn btn-outline btn-sm">Tout voir</a>
+        </div>
+        <div class="card-body">
+            {% for produit in produits_alerte %}
+            <div class="alerte-item">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div class="alerte-info">
+                    <div class="alerte-name">{{ produit.nom }}</div>
+                    <div class="alerte-qty">Stock : {{ produit.quantite_stock }} / Seuil : {{ produit.seuil_alerte }}</div>
+                    <div class="stock-bar" style="margin-top:6px">
+                        <div class="stock-bar-fill low" style="width: {% widthratio produit.quantite_stock produit.seuil_alerte 100 %}%"></div>
+                    </div>
+                </div>
+                <a href="{% url 'stock:mouvement_ajouter' %}" class="btn btn-primary btn-sm btn-icon" title="Approvisionner">
+                    <i class="fas fa-plus"></i>
+                </a>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="fas fa-check-circle" style="color:var(--success);opacity:1"></i>
+                <h3>Tout est bon !</h3>
+                <p>Aucun produit en rupture</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+<!-- ── Dernières Factures ── -->
+<div class="card" style="margin-top: 20px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-file-invoice-dollar"></i>
+            Dernières factures
+        </div>
+        <a href="{% url 'stock:facture_liste' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus"></i> Nouvelle facture
+        </a>
+    </div>
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>N° Facture</th>
+                    <th>Client</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for facture in dernieres_factures %}
+                <tr>
+                    <td><strong>{{ facture.numero }}</strong></td>
+                    <td>{{ facture.client.nom }}</td>
+                    <td>{{ facture.date_creation|date:"d/m/Y" }}</td>
+                    <td><strong>{{ facture.total }} MRU</strong></td>
+                    <td>
+                        {% if facture.statut == 'payee' %}
+                            <span class="badge badge-success">Payée</span>
+                        {% elif facture.statut == 'partiellement' %}
+                            <span class="badge badge-warning">Partielle</span>
+                        {% else %}
+                            <span class="badge badge-danger">Non payée</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex; gap:6px;">
+                            <a href="{% url 'stock:facture_detail' facture.pk %}" class="btn btn-outline btn-sm btn-icon" title="Voir">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'stock:facture_pdf' facture.pk %}" class="btn btn-primary btn-sm btn-icon" title="PDF">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state" style="padding:30px">
+                            <i class="fas fa-file-invoice"></i>
+                            <p>Aucune facture pour l'instant</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

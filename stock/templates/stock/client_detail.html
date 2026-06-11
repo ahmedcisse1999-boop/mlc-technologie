@@ -1,0 +1,346 @@
+{% extends 'base.html' %}
+{% block title %}{{ client.nom }}{% endblock %}
+{% block page_title %}Client{% endblock %}
+{% block breadcrumb %}Commerce › Clients › {{ client.nom }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>{{ client.nom }}</h2>
+        <p>Client depuis le {{ client.date_ajout|date:"d/m/Y" }}</p>
+    </div>
+    <div style="display:flex;gap:10px;">
+        <a href="{% url 'stock:client_liste' %}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+        <a href="{% url 'stock:client_modifier' client.pk %}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Modifier
+        </a>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start;">
+
+<!-- ═══ INFOS CLIENT ═══ -->
+<div style="display:flex;flex-direction:column;gap:16px;">
+
+    <!-- Informations -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-user"></i> Informations du client</div>
+        </div>
+        <div class="card-body">
+            <div style="display:flex;align-items:center;gap:20px;margin-bottom:24px;">
+                <div style="width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;flex-shrink:0;">
+                    {{ client.nom|first|upper }}
+                </div>
+                <div>
+                    <div style="font-size:22px;font-weight:800;color:var(--text-dark);">{{ client.nom }}</div>
+                    <div style="font-size:13px;color:var(--text-light);margin-top:4px;">
+                        <i class="fas fa-calendar" style="color:var(--primary);"></i>
+                        Client depuis le {{ client.date_ajout|date:"d/m/Y" }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div style="background:var(--bg);border-radius:10px;padding:14px;">
+                    <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700;margin-bottom:6px;">
+                        <i class="fas fa-phone" style="color:var(--primary);"></i> Téléphone
+                    </div>
+                    <div style="font-weight:600;color:var(--text-dark);">
+                        {{ client.telephone|default:"—" }}
+                    </div>
+                </div>
+                <div style="background:var(--bg);border-radius:10px;padding:14px;">
+                    <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700;margin-bottom:6px;">
+                        <i class="fas fa-envelope" style="color:var(--primary);"></i> Email
+                    </div>
+                    <div style="font-weight:600;color:var(--text-dark);">
+                        {{ client.email|default:"—" }}
+                    </div>
+                </div>
+            </div>
+
+            {% if client.adresse %}
+            <div style="margin-top:14px;background:var(--bg);border-radius:10px;padding:14px;">
+                <div style="font-size:11px;color:var(--text-light);text-transform:uppercase;font-weight:700;margin-bottom:6px;">
+                    <i class="fas fa-map-marker-alt" style="color:var(--primary);"></i> Adresse
+                </div>
+                <div style="font-weight:600;color:var(--text-dark);">{{ client.adresse }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Factures du client -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-file-invoice-dollar"></i> Factures</div>
+            <a href="{% url 'stock:facture_ajouter' %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> Nouvelle
+            </a>
+        </div>
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>N° Facture</th>
+                        <th>Date</th>
+                        <th>Total</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in client.facture_set.all %}
+                    <tr>
+                        <td><strong>{{ f.numero }}</strong></td>
+                        <td>{{ f.date_creation|date:"d/m/Y" }}</td>
+                        <td><strong style="color:var(--primary);">{{ f.total }} MRU</strong></td>
+                        <td>
+                            {% if f.statut == 'payee' %}
+                                <span class="badge badge-success">Payée</span>
+                            {% elif f.statut == 'partiellement' %}
+                                <span class="badge badge-warning">Partielle</span>
+                            {% else %}
+                                <span class="badge badge-danger">Non payée</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'stock:facture_detail' f.pk %}" class="btn btn-outline btn-sm btn-icon">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state" style="padding:20px;">
+                                <i class="fas fa-file-invoice"></i>
+                                <p>Aucune facture</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Devis du client -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-file-alt"></i> Devis</div>
+            <a href="{% url 'stock:devis_ajouter' %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> Nouveau
+            </a>
+        </div>
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>N° Devis</th>
+                        <th>Date</th>
+                        <th>Total</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in client.devis_set.all %}
+                    <tr>
+                        <td><strong>{{ d.numero }}</strong></td>
+                        <td>{{ d.date_creation|date:"d/m/Y" }}</td>
+                        <td><strong style="color:var(--primary);">{{ d.total }} MRU</strong></td>
+                        <td>
+                            {% if d.statut == 'accepte' %}
+                                <span class="badge badge-success">Accepté</span>
+                            {% elif d.statut == 'envoye' %}
+                                <span class="badge badge-info">Envoyé</span>
+                            {% elif d.statut == 'refuse' %}
+                                <span class="badge badge-danger">Refusé</span>
+                            {% else %}
+                                <span class="badge badge-gray">Brouillon</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'stock:devis_detail' d.pk %}" class="btn btn-outline btn-sm btn-icon">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state" style="padding:20px;">
+                                <i class="fas fa-file-alt"></i>
+                                <p>Aucun devis</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Installations du client -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-tools"></i> Installations</div>
+        </div>
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Référence</th>
+                        <th>Date prévue</th>
+                        <th>Technicien</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inst in client.installations.all %}
+                    <tr>
+                        <td><strong>{{ inst.reference }}</strong></td>
+                        <td>{{ inst.date_prevue|date:"d/m/Y" }}</td>
+                        <td>{{ inst.technicien|default:"—" }}</td>
+                        <td>
+                            {% if inst.statut == 'termine' %}
+                                <span class="badge badge-success">Terminé</span>
+                            {% elif inst.statut == 'en_cours' %}
+                                <span class="badge badge-info">En cours</span>
+                            {% elif inst.statut == 'planifie' %}
+                                <span class="badge badge-warning">Planifié</span>
+                            {% else %}
+                                <span class="badge badge-danger">Annulé</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'stock:installation_detail' inst.pk %}" class="btn btn-outline btn-sm btn-icon">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state" style="padding:20px;">
+                                <i class="fas fa-tools"></i>
+                                <p>Aucune installation</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- ═══ COLONNE DROITE ═══ -->
+<div style="display:flex;flex-direction:column;gap:16px;">
+
+    <!-- Résumé -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-chart-pie"></i> Résumé</div>
+        </div>
+        <div class="card-body" style="padding:16px;">
+            <div class="total-row">
+                <span>Total factures</span>
+                <span style="font-weight:700;">{{ client.facture_set.count }}</span>
+            </div>
+            <div class="total-row">
+                <span>Total devis</span>
+                <span style="font-weight:700;">{{ client.devis_set.count }}</span>
+            </div>
+            <div class="total-row">
+                <span>Installations</span>
+                <span style="font-weight:700;">{{ client.installations.count }}</span>
+            </div>
+            <div class="total-row">
+                <span>Maintenances</span>
+                <span style="font-weight:700;">{{ client.maintenances.count }}</span>
+            </div>
+            <div class="total-row">
+                <span>Contrats</span>
+                <span style="font-weight:700;">{{ client.contrats.count }}</span>
+            </div>
+            <div class="total-row" style="border-top:2px solid var(--primary);margin-top:6px;padding-top:10px;">
+                <span style="font-weight:700;">CA Total</span>
+                <span style="font-weight:800;font-size:16px;color:var(--primary);">
+                    {% with total=0 %}
+                    {% for f in factures_payees %}
+                    {% endfor %}
+                    — MRU
+                    {% endwith %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sites -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-map-marker-alt"></i> Sites</div>
+            <a href="{% url 'stock:site_ajouter' %}" class="btn btn-primary btn-sm btn-icon">
+                <i class="fas fa-plus"></i>
+            </a>
+        </div>
+        <div class="card-body" style="padding:12px;">
+            {% for site in client.sites.all %}
+            <div style="padding:10px;background:var(--bg);border-radius:8px;margin-bottom:8px;">
+                <div style="font-weight:600;font-size:13px;color:var(--text-dark);">
+                    <i class="fas fa-map-pin" style="color:var(--primary);"></i>
+                    {{ site.nom }}
+                </div>
+                <div style="font-size:11px;color:var(--text-light);margin-top:3px;">
+                    {{ site.adresse|truncatechars:40 }}
+                </div>
+                {% if site.latitude and site.longitude %}
+                <a href="https://maps.google.com/?q={{ site.latitude }},{{ site.longitude }}"
+                   target="_blank" style="font-size:11px;color:var(--primary);">
+                    <i class="fas fa-external-link-alt"></i> Voir sur Maps
+                </a>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div class="empty-state" style="padding:20px;">
+                <i class="fas fa-map-marker-alt"></i>
+                <p>Aucun site</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-bolt"></i> Actions</div>
+        </div>
+        <div class="card-body" style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+            <a href="{% url 'stock:client_modifier' client.pk %}" class="btn btn-warning" style="justify-content:center;">
+                <i class="fas fa-edit"></i> Modifier
+            </a>
+            <a href="{% url 'stock:facture_ajouter' %}" class="btn btn-primary" style="justify-content:center;">
+                <i class="fas fa-file-invoice-dollar"></i> Nouvelle facture
+            </a>
+            <a href="{% url 'stock:devis_ajouter' %}" class="btn btn-navy" style="justify-content:center;">
+                <i class="fas fa-file-alt"></i> Nouveau devis
+            </a>
+            <a href="{% url 'stock:installation_ajouter' %}" class="btn btn-outline" style="justify-content:center;">
+                <i class="fas fa-tools"></i> Nouvelle installation
+            </a>
+            <a href="{% url 'stock:client_supprimer' client.pk %}" class="btn btn-danger" style="justify-content:center;">
+                <i class="fas fa-trash"></i> Supprimer
+            </a>
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock %}

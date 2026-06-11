@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}Ventes{% endblock %}
+{% block page_title %}Ventes{% endblock %}
+{% block breadcrumb %}Commerce › Ventes{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <h2>Liste des ventes</h2>
+        <p>Ventes générées automatiquement après paiement complet</p>
+    </div>
+</div>
+
+<!-- Stat total -->
+<div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px;">
+    <div class="stat-card green">
+        <div class="stat-icon green"><i class="fas fa-shopping-cart"></i></div>
+        <div>
+            <div class="stat-value">{{ ventes.count }}</div>
+            <div class="stat-label">Ventes totales</div>
+        </div>
+    </div>
+    <div class="stat-card orange">
+        <div class="stat-icon orange"><i class="fas fa-coins"></i></div>
+        <div>
+            <div class="stat-value">{{ total_ventes }} MRU</div>
+            <div class="stat-label">Chiffre d'affaires</div>
+        </div>
+    </div>
+    <div class="stat-card navy">
+        <div class="stat-icon navy"><i class="fas fa-check-circle"></i></div>
+        <div>
+            <div class="stat-value">{{ ventes.count }}</div>
+            <div class="stat-label">Factures payées</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>N° Facture</th>
+                    <th>Client</th>
+                    <th>Date vente</th>
+                    <th>Produits</th>
+                    <th>Mode paiement</th>
+                    <th>Total</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vente in ventes %}
+                <tr>
+                    <td><strong>{{ vente.facture.numero }}</strong></td>
+                    <td>{{ vente.client.nom }}</td>
+                    <td>{{ vente.date|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        {% for ligne in vente.lignes.all %}
+                        <div style="font-size:12px;">
+                            <span style="font-weight:600;">{{ ligne.produit.nom }}</span>
+                            <span style="color:var(--text-light);">× {{ ligne.quantite }}</span>
+                        </div>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% if vente.mode_paiement == 'especes' %}
+                            <span class="badge badge-success"><i class="fas fa-money-bill"></i> Espèces</span>
+                        {% elif vente.mode_paiement == 'virement' %}
+                            <span class="badge badge-info"><i class="fas fa-university"></i> Virement</span>
+                        {% elif vente.mode_paiement == 'cheque' %}
+                            <span class="badge badge-warning"><i class="fas fa-money-check"></i> Chèque</span>
+                        {% else %}
+                            <span class="badge badge-gray"><i class="fas fa-mobile-alt"></i> Mobile</span>
+                        {% endif %}
+                    </td>
+                    <td><strong style="color:var(--primary);">{{ vente.total }} MRU</strong></td>
+                    <td>
+                        <a href="{% url 'stock:facture_detail' vente.facture.pk %}" class="btn btn-outline btn-sm btn-icon" title="Voir facture">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="fas fa-shopping-cart"></i>
+                            <h3>Aucune vente</h3>
+                            <p>Les ventes apparaissent automatiquement quand une facture est entièrement payée</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

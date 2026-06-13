@@ -22,9 +22,12 @@ MIDDLEWARE = [
     'stock.middleware.LoginRequiredMiddleware',
 ]
 
-# Base de données
-DATABASE_URL = os.environ.get('DATABASE_URL')
-if DATABASE_URL:
+import os
+import dj_database_url
+
+DATABASE_URL = os.environ.get('DATABASE_URL', '')
+
+if DATABASE_URL and DATABASE_URL != '://':
     DATABASES = {
         'default': dj_database_url.config(
             default=DATABASE_URL,
@@ -32,6 +35,7 @@ if DATABASE_URL:
         )
     }
 else:
+    # Local — Oracle
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.oracle',
